@@ -52,6 +52,32 @@ Implement the framework-agnostic core that manages toast lifecycle, timers, and 
 
 ---
 
+### [02b. Building the Toast Manager (Functional)](./02b-building-the-toast-manager.md)
+Build the same toast manager behavior using a functional factory and closure-based state.
+
+- Closure-based manager architecture
+- Pure state transition helpers
+- Centralized timer synchronization
+- Dedupe modes and multi-instance isolation
+- Functional testing patterns
+
+**Time**: 1 hour | **Difficulty**: Intermediate
+
+---
+
+### [02c. Comparing Toast Manager Approaches (A/B)](./02c-comparing-toast-manager-approaches.md)
+Compare class-based and functional manager implementations for real project decisions.
+
+- Performance tradeoffs in real workloads
+- DX and contributor ergonomics
+- Maintainability and refactor safety
+- OSS scaling considerations
+- Weighted decision matrix and recommendation
+
+**Time**: 25 minutes | **Difficulty**: Intermediate
+
+---
+
 ### [03. Factory Pattern and TypeScript Generics](./03-factory-pattern-and-typescript-generics.md)
 Create the `createToast()` factory with full type inference using advanced TypeScript patterns.
 
