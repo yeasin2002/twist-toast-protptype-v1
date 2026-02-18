@@ -173,10 +173,10 @@ pnpm check-types
 
 ```bash
 # Build twist-toast
-cd packages/twist-toast && pnpm build
+cd packages/core && pnpm build
 
 # Watch mode for twist-toast
-cd packages/twist-toast && pnpm dev
+cd packages/core && pnpm dev
 ```
 
 ## TypeScript Configuration
