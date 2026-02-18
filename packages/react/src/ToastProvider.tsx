@@ -1,6 +1,6 @@
 import type { ToastManager, ToastPosition, ToastRecord, ToastRole, ToastState } from '@twist-toast/core'
 import type { CSSProperties, ReactNode } from 'react'
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { getInstancesSnapshot, subscribeToRegistry } from './registry'
 import type { ToastComponent, ToastComponentsMap } from './types'
@@ -57,24 +57,68 @@ const positionStyles: Record<ToastPosition, CSSProperties> = {
   },
 }
 
+const TRANSITION_DURATION_MS = 180
+
+type ToastRenderPhase = 'enter' | 'visible' | 'exit'
+
+interface RenderedToast {
+  toast: ToastRecord
+  phase: ToastRenderPhase
+}
+
 function getAriaLive(role: ToastRole): 'polite' | 'assertive' {
   return role === 'alert' ? 'assertive' : 'polite'
 }
 
-function getPositionBuckets(toasts: ToastRecord[]): Map<ToastPosition, ToastRecord[]> {
-  const buckets = new Map<ToastPosition, ToastRecord[]>()
+function getPositionBuckets(
+  toasts: RenderedToast[],
+): Map<ToastPosition, RenderedToast[]> {
+  const buckets = new Map<ToastPosition, RenderedToast[]>()
 
-  for (const toast of toasts) {
-    const current = buckets.get(toast.position)
+  for (const item of toasts) {
+    const position = item.toast.position
+    const current = buckets.get(position)
     if (current) {
-      current.push(toast)
+      current.push(item)
       continue
     }
 
-    buckets.set(toast.position, [toast])
+    buckets.set(position, [item])
   }
 
   return buckets
+}
+
+function getHiddenTransform(position: ToastPosition): string {
+  switch (position) {
+    case 'top-left':
+      return 'translate3d(-8px, -8px, 0)'
+    case 'top-center':
+      return 'translate3d(0, -8px, 0)'
+    case 'top-right':
+      return 'translate3d(8px, -8px, 0)'
+    case 'bottom-left':
+      return 'translate3d(-8px, 8px, 0)'
+    case 'bottom-center':
+      return 'translate3d(0, 8px, 0)'
+    case 'bottom-right':
+      return 'translate3d(8px, 8px, 0)'
+  }
+}
+
+function getToastStyle(
+  position: ToastPosition,
+  phase: ToastRenderPhase,
+): CSSProperties {
+  const isVisible = phase === 'visible'
+
+  return {
+    pointerEvents: phase === 'exit' ? 'none' : 'auto',
+    opacity: isVisible ? 1 : 0,
+    transform: isVisible ? 'translate3d(0, 0, 0)' : getHiddenTransform(position),
+    transition: `opacity ${TRANSITION_DURATION_MS}ms ease, transform ${TRANSITION_DURATION_MS}ms ease`,
+    willChange: 'opacity, transform',
+  }
 }
 
 interface ManagerToastsProps {
@@ -84,12 +128,121 @@ interface ManagerToastsProps {
 
 function ManagerToasts({ manager, components }: ManagerToastsProps) {
   const [state, setState] = useState<ToastState>(() => manager.getState())
+  const [renderedToasts, setRenderedToasts] = useState<RenderedToast[]>([])
+  const exitTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   useEffect(() => {
     return manager.subscribe(setState)
   }, [manager])
 
-  const groupedToasts = useMemo(() => getPositionBuckets(state.active), [state.active])
+  useEffect(() => {
+    const activeById = new Map(state.active.map((toast) => [toast.id, toast]))
+
+    setRenderedToasts((previous) => {
+      const next: RenderedToast[] = []
+      const seen = new Set<string>()
+
+      for (const item of previous) {
+        const activeToast = activeById.get(item.toast.id)
+        if (activeToast) {
+          next.push({
+            toast: activeToast,
+            phase: item.phase === 'exit' ? 'visible' : item.phase,
+          })
+        } else {
+          next.push({
+            toast: item.toast,
+            phase: 'exit',
+          })
+        }
+
+        seen.add(item.toast.id)
+      }
+
+      for (const toast of state.active) {
+        if (seen.has(toast.id)) {
+          continue
+        }
+
+        next.push({
+          toast,
+          phase: 'enter',
+        })
+      }
+
+      return next
+    })
+  }, [state.active])
+
+  useEffect(() => {
+    const hasEnteringToasts = renderedToasts.some((item) => item.phase === 'enter')
+    if (!hasEnteringToasts) {
+      return undefined
+    }
+
+    const frame = requestAnimationFrame(() => {
+      setRenderedToasts((previous) =>
+        previous.map((item) =>
+          item.phase === 'enter'
+            ? {
+                ...item,
+                phase: 'visible',
+              }
+            : item,
+        ),
+      )
+    })
+
+    return () => {
+      cancelAnimationFrame(frame)
+    }
+  }, [renderedToasts])
+
+  useEffect(() => {
+    const exitingIds = new Set(
+      renderedToasts
+        .filter((item) => item.phase === 'exit')
+        .map((item) => item.toast.id),
+    )
+
+    for (const id of exitingIds) {
+      if (exitTimers.current.has(id)) {
+        continue
+      }
+
+      const handle = setTimeout(() => {
+        exitTimers.current.delete(id)
+        setRenderedToasts((previous) =>
+          previous.filter((item) => item.toast.id !== id),
+        )
+      }, TRANSITION_DURATION_MS)
+
+      exitTimers.current.set(id, handle)
+    }
+
+    for (const [id, handle] of Array.from(exitTimers.current.entries())) {
+      if (exitingIds.has(id)) {
+        continue
+      }
+
+      clearTimeout(handle)
+      exitTimers.current.delete(id)
+    }
+  }, [renderedToasts])
+
+  useEffect(() => {
+    return () => {
+      for (const handle of exitTimers.current.values()) {
+        clearTimeout(handle)
+      }
+      exitTimers.current.clear()
+    }
+  }, [])
+
+  const groupedToasts = useMemo(
+    () => getPositionBuckets(renderedToasts),
+    [renderedToasts],
+  )
 
   return (
     <>
@@ -106,7 +259,8 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
 
         return (
           <div key={position} data-position={position} style={containerStyle}>
-            {toasts.map((toast) => {
+            {toasts.map((item) => {
+              const toast = item.toast
               const ToastView = components[toast.variant] as ToastComponent | undefined
 
               if (!ToastView) {
@@ -125,19 +279,28 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
                 manager.resume(toast.id)
               }
 
+              const visualState =
+                item.phase === 'exit'
+                  ? 'exiting'
+                  : item.phase === 'enter'
+                    ? 'entering'
+                    : toast.paused
+                      ? 'paused'
+                      : 'active'
+
               return (
                 <div
                   key={toast.id}
                   data-twist-toast=""
                   data-position={toast.position}
                   data-variant={toast.variant}
-                  data-state={toast.paused ? 'paused' : 'active'}
+                  data-state={visualState}
                   role={toast.role}
                   aria-live={getAriaLive(toast.role)}
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
                   onClick={toast.dismissOnClick ? dismiss : undefined}
-                  style={{ pointerEvents: 'auto' }}
+                  style={getToastStyle(toast.position, item.phase)}
                 >
                   <ToastView
                     {...toast.payload}

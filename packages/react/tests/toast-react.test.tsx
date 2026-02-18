@@ -1,6 +1,6 @@
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider, createToast } from '../src'
 import { __resetRegistryForTests } from '../src/registry'
 import type { ToastComponentProps } from '../src/types'
@@ -13,6 +13,7 @@ describe('react wrapper smoke test', () => {
   let mountNode: HTMLDivElement
 
   beforeEach(() => {
+    vi.useFakeTimers()
     __resetRegistryForTests()
     document.body.innerHTML = ''
     mountNode = document.createElement('div')
@@ -20,6 +21,7 @@ describe('react wrapper smoke test', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     mountNode.remove()
     document.body.innerHTML = ''
   })
@@ -58,6 +60,10 @@ describe('react wrapper smoke test', () => {
         toastElement.dispatchEvent(new MouseEvent('click', { bubbles: true }))
       })
     }
+
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
 
     expect(document.querySelector('[data-twist-toast]')).toBeNull()
 
