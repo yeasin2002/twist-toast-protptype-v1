@@ -2,17 +2,8 @@
   "name": "@twist-toast/react",
   "type": "module",
   "version": "0.0.0",
-  "description": "A starter for creating a React component library.",
-  "author": "Author Name <author.name@mail.com>",
+  "description": "React adapter package for twist-toast",
   "license": "MIT",
-  "homepage": "https://github.com/author/library#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/author/library.git"
-  },
-  "bugs": {
-    "url": "https://github.com/author/library/issues"
-  },
   "exports": {
     ".": "./dist/index.js",
     "./package.json": "./package.json"
@@ -30,14 +21,16 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "play": "vite",
-    "test": "vitest",
+    "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsc --noEmit",
-    "release": "bumpp && pnpm publish",
     "prepublishOnly": "pnpm run build"
   },
+  "dependencies": {
+    "@twist-toast/core": "workspace:*"
+  },
   "peerDependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
@@ -45,12 +38,10 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/browser-playwright": "^4.0.16",
-    "bumpp": "^10.3.2",
+    "jsdom": "^27.0.1",
     "tsdown": "^0.18.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
-    "vitest": "^4.0.16",
-    "vitest-browser-react": "^2.0.2"
+    "vitest": "^4.0.16"
   }
 }

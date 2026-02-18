@@ -40,18 +40,21 @@ React 17+ support with TypeScript generics, comprehensive testing, and npm publi
 
 ```
 twist-toast/
-├── example/           # example use of this library (Not available now, will be added in future after core library is ready)
-├── packages/           # Workspace packages
-│   ├── core/   # Core library (main deliverable)
-│   ├── react/ # React-specific utilities or providers (if needed in future)
-│   ├── [others] # in future I will add other framework specific packages like Vue, Angular, Svelte, etc. support, (If needed). not now. 
-│
-├── tooling/           # Workspace tooling packages
-│   ├── eslint-config/ # Shared ESLint configurations
+├── .agents/skills/          # AI Skills rules
+├── packages/              # Workspace packages
+│   ├── core/              # Framework-agnostic core package
+│   └── react/             # React adapter package
+├── examples/              # Local example apps
+│   └── vite-react/        # Vite + React example app
+├── tooling/               # Shared tooling packages
+│   ├── eslint-config/     # Shared ESLint configurations
 │   └── typescript-config/ # Shared TypeScript configurations
-├── AGENTS.md/             # shared AI assistant guidance documents/Rules
-├── tutorials/             # Guides and tutorials for building and  using the library
-├── .turbo/            # Turborepo cache and daemon logs
+├── tutorials/             # Internal guides and implementation notes
+├── .agents/               # Local skills/instructions for AI workflows
+├── .turbo/                # Turborepo cache and daemon logs
+├── AGENTS.md              # Project guidance and architecture notes
+├── PROJECT-BRD.md         # Business requirements and roadmap
+└── README.md              # Root project documentation
 ```
 
 ## Package Organization

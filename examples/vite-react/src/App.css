@@ -1,42 +1,95 @@
-#root {
-  max-width: 1280px;
+.app {
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  color: #1f2937;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app h1 {
+  margin: 0 0 0.75rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.app p {
+  margin: 0 0 1.5rem;
+  color: #4b5563;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
 }
 
-.card {
-  padding: 2em;
+.button-grid button,
+.actions button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 
-.read-the-docs {
-  color: #888;
+.button-grid button:hover,
+.actions button:hover {
+  border-color: #9ca3af;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(360px, calc(100vw - 2rem));
+  border-radius: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.15),
+    0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.toast strong {
+  display: block;
+}
+
+.toast p {
+  margin: 0.4rem 0 0;
+  color: inherit;
+}
+
+.toast button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast-success {
+  color: #ffffff;
+  background: linear-gradient(135deg, #15803d, #16a34a);
+}
+
+.toast-error {
+  color: #ffffff;
+  background: linear-gradient(135deg, #b91c1c, #ef4444);
+}
+
+.toast-info {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
 }
