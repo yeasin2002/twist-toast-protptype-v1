@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { toast } from "./lib/toast";
 
-const controlButtonClass =
-  "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50";
+
 
 function App() {
   const [lastToastId, setLastToastId] = useState<string | null>(null);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-100 to-white px-4 py-10 text-slate-900 sm:px-6">
+    <main className="min-h-screen bg-linear-to-b from-slate-100 to-white px-4 py-10 text-slate-900 sm:px-6">
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <header className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -31,7 +30,7 @@ function App() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 const id = toast.success({ title: "Saved successfully" });
                 setLastToastId(id);
@@ -42,7 +41,7 @@ function App() {
 
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 const id = toast.error(
                   {
@@ -61,7 +60,7 @@ function App() {
 
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 const id = toast.info(
                   { message: "This toast lasts 1 second" },
@@ -75,7 +74,7 @@ function App() {
 
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 const id = toast.info(
                   { message: "Bottom center toast" },
@@ -89,7 +88,7 @@ function App() {
 
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 const id = toast.info(
                   { message: "No auto-dismiss. Click the toast to close." },
@@ -103,7 +102,7 @@ function App() {
 
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 for (let i = 1; i <= 6; i += 1) {
                   toast.info({ message: `Queued toast #${i}` });
@@ -127,7 +126,7 @@ function App() {
           <div className="flex gap-3">
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 if (lastToastId) {
                   toast.dismiss(lastToastId);
@@ -140,7 +139,7 @@ function App() {
             </button>
             <button
               type="button"
-              className={controlButtonClass}
+              className={"controlButtonClass"}
               onClick={() => {
                 toast.dismissAll();
                 setLastToastId(null);
