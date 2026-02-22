@@ -22,6 +22,7 @@ pnpm create next-app@latest apps/example --typescript --tailwind --app --no-src-
 ```
 
 Answer the prompts:
+
 - TypeScript: Yes
 - ESLint: Yes
 - Tailwind CSS: Yes
@@ -78,8 +79,13 @@ Run `pnpm install` from the root to link the packages.
 Create `apps/example/lib/toast.ts`:
 
 ```typescript
-import { createToast } from 'twist-toast';
-import { SuccessToast, ErrorToast, InfoToast, WarningToast } from '@/components/toasts';
+import { createToast } from "twist-toast";
+import {
+  SuccessToast,
+  ErrorToast,
+  InfoToast,
+  WarningToast,
+} from "@/components/toasts";
 
 export const toast = createToast(
   {
@@ -90,9 +96,9 @@ export const toast = createToast(
   },
   {
     defaultDuration: 4000,
-    defaultPosition: 'top-right',
+    defaultPosition: "top-right",
     maxToasts: 5,
-  }
+  },
 );
 ```
 
@@ -595,12 +601,14 @@ export default function AdvancedPage() {
 ## Next Steps
 
 You now have a fully functional example app! Use it to:
+
 - Test new features before publishing
 - Create documentation screenshots
 - Demonstrate usage patterns
 - Debug issues in a real-world context
 
 **Key takeaways:**
+
 - Example apps are essential for library development
 - Use workspace protocol to link local packages
 - Create comprehensive demos for all features

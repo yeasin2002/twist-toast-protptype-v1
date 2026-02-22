@@ -14,12 +14,14 @@
 The React package demonstrates sophisticated TypeScript type inference and clean React patterns. The factory pattern with type inference is impressive. However, there are concerns about complexity in the lifecycle management and potential performance issues with the registry pattern.
 
 **Key Strengths:**
+
 - Excellent TypeScript type inference
 - Zero-config provider pattern
 - Clean separation from core
 - Smooth transition animations
 
 **Key Concerns:**
+
 - Over-complex lifecycle state management
 - Registry pattern may not scale
 - Potential performance issues with re-renders
@@ -38,13 +40,13 @@ The type system is genuinely impressive:
 ```typescript
 type ExtractPayload<TComponent> = Omit<
   ExtractComponentProps<TComponent>,
-  'dismiss' | 'toastId'
->
+  "dismiss" | "toastId"
+>;
 
-type VariantMethod<TComponent> = 
+type VariantMethod<TComponent> =
   RequiredKeys<ExtractPayload<TComponent>> extends never
     ? (payload?, options?) => string
-    : (payload, options?) => string
+    : (payload, options?) => string;
 ```
 
 This provides full type safety from component definitions to method calls. Well done.
@@ -55,9 +57,9 @@ This provides full type safety from component definitions to method calls. Well 
 const toast = createToast({
   success: SuccessToast,
   error: ErrorToast,
-})
+});
 
-toast.success({ message: 'Saved!' })  // Fully typed!
+toast.success({ message: "Saved!" }); // Fully typed!
 ```
 
 Clean API, no context hooks needed, stable imports. Excellent DX.
@@ -65,9 +67,9 @@ Clean API, no context hooks needed, stable imports. Excellent DX.
 **3. Portal Rendering**
 
 ```typescript
-const root = document.createElement('div')
-root.setAttribute('data-twist-toast-root', '')
-document.body.appendChild(root)
+const root = document.createElement("div");
+root.setAttribute("data-twist-toast-root", "");
+document.body.appendChild(root);
 ```
 
 Avoids z-index hell and overflow issues. Good decision.
@@ -80,8 +82,8 @@ The three-phase lifecycle (`enter` → `visible` → `exit`) adds significant co
 
 ```typescript
 interface RenderedToast {
-  toast: ToastRecord
-  phase: ToastRenderPhase  // 'enter' | 'visible' | 'exit'
+  toast: ToastRecord;
+  phase: ToastRenderPhase; // 'enter' | 'visible' | 'exit'
 }
 ```
 
@@ -90,6 +92,7 @@ interface RenderedToast {
 **Problem:** This is a lot of state management for a simple fade-in/fade-out.
 
 **Analysis:**
+
 - Separate `renderedToasts` state from core state
 - Multiple `useEffect` hooks to manage phase transitions
 - `exitTimers` map to track unmounting
@@ -98,6 +101,7 @@ interface RenderedToast {
 **Is this necessary?** Let's evaluate alternatives:
 
 **Alternative 1: CSS-only transitions**
+
 ```css
 [data-twist-toast] {
   animation: slideIn 180ms ease;
@@ -111,6 +115,7 @@ interface RenderedToast {
 **Problem:** Can't delay unmount without JS.
 
 **Alternative 2: React Transition Group**
+
 ```typescript
 <TransitionGroup>
   {toasts.map(toast => (
@@ -123,7 +128,6 @@ interface RenderedToast {
 
 **Problem:** Adds dependency, but simpler than custom solution.
 
-
 **Problem:** Heavy dependency for simple fade.
 
 **Verdict:** Current approach is reasonable for zero-dependency goal, but could be simplified. See recommendations.
@@ -131,10 +135,10 @@ interface RenderedToast {
 **2. Registry Pattern Scalability**
 
 ```typescript
-const instanceIds = new WeakMap<object, string>()
-const entries = new Map<string, ToastRegistryEntry>()
-const listeners = new Set<RegistryListener>()
-let snapshot: ToastRegistryEntry[] = []
+const instanceIds = new WeakMap<object, string>();
+const entries = new Map<string, ToastRegistryEntry>();
+const listeners = new Set<RegistryListener>();
+let snapshot: ToastRegistryEntry[] = [];
 ```
 
 **Concerns:**
@@ -149,6 +153,7 @@ d) **Testing complexity** - Requires `__resetRegistryForTests()` hack
 **Is it worth it?** Let's evaluate:
 
 **Benefit:** Provider needs no props
+
 ```typescript
 <ToastProvider>  {/* No props! */}
   <App />
@@ -158,6 +163,7 @@ d) **Testing complexity** - Requires `__resetRegistryForTests()` hack
 **Cost:** Global state, potential memory leaks, testing complexity
 
 **Alternative:** Context-based approach
+
 ```typescript
 const toast = createToast(components)
 
@@ -196,20 +202,21 @@ Every registry change (any instance adding a toast) causes provider to re-render
 **b) ManagerToasts Re-renders**
 
 ```typescript
-const [state, setState] = useState(() => manager.getState())
-const [renderedToasts, setRenderedToasts] = useState([])
+const [state, setState] = useState(() => manager.getState());
+const [renderedToasts, setRenderedToasts] = useState([]);
 
 useEffect(() => {
-  return manager.subscribe(setState)
-}, [manager])
+  return manager.subscribe(setState);
+}, [manager]);
 
 useEffect(() => {
   // Reconcile renderedToasts with state.active
-  setRenderedToasts(/* complex logic */)
-}, [state.active])
+  setRenderedToasts(/* complex logic */);
+}, [state.active]);
 ```
 
 Two state updates per toast change:
+
 1. `setState` from manager subscription
 2. `setRenderedToasts` from reconciliation effect
 
@@ -220,8 +227,8 @@ Two state updates per toast change:
 ```typescript
 const groupedToasts = useMemo(
   () => getPositionBuckets(renderedToasts),
-  [renderedToasts]
-)
+  [renderedToasts],
+);
 ```
 
 Recalculates on every `renderedToasts` change. This is fine, but could be optimized if needed.
@@ -234,13 +241,14 @@ Recalculates on every `renderedToasts` change. This is fine, but could be optimi
 
 **createToast:** Factory for typed instances  
 **ToastProvider:** Rendering and lifecycle  
-**registry:** Instance tracking  
+**registry:** Instance tracking
 
 Clear separation. **Grade: A**
 
 ### ⚠️ Open/Closed Principle
 
 Hard to extend without modifying:
+
 - Can't customize transition duration
 - Can't customize portal target
 - Can't customize position styles
@@ -260,10 +268,11 @@ Clean interfaces, no fat types. **Grade: A**
 Depends on concrete DOM APIs (`document.createElement`, `document.body`).
 
 Could abstract:
+
 ```typescript
 interface DOMAdapter {
-  createPortalRoot(): HTMLElement
-  appendToBody(el: HTMLElement): void
+  createPortalRoot(): HTMLElement;
+  appendToBody(el: HTMLElement): void;
 }
 ```
 
@@ -276,30 +285,36 @@ But this is YAGNI for v1. **Grade: B+**
 ### ✅ Good Practices
 
 **1. useSyncExternalStore**
+
 ```typescript
 const instances = useSyncExternalStore(
   subscribeToRegistry,
   getInstancesSnapshot,
-)
+);
 ```
+
 Correct use of React 18 API for external state.
 
 **2. Cleanup Effects**
+
 ```typescript
 useEffect(() => {
   return () => {
     for (const handle of exitTimers.current.values()) {
-      clearTimeout(handle)
+      clearTimeout(handle);
     }
-  }
-}, [])
+  };
+}, []);
 ```
+
 Proper cleanup of timers.
 
 **3. Stable Callbacks**
+
 ```typescript
-const dismiss = () => manager.dismiss(toast.id)
+const dismiss = () => manager.dismiss(toast.id);
 ```
+
 Inline functions are fine here (not passed as props to memoized children).
 
 ### ⚠️ Concerns
@@ -315,13 +330,14 @@ Inline functions are fine here (not passed as props to memoized children).
 If a toast component throws, it could crash the entire app.
 
 **Fix:**
+
 ```typescript
 class ToastErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     console.error('Toast render error:', error)
     // Dismiss the problematic toast
   }
-  
+
   render() {
     return this.props.children
   }
@@ -337,14 +353,15 @@ class ToastErrorBoundary extends React.Component {
 
 ```typescript
 useEffect(() => {
-  if (typeof document === 'undefined') {
-    return undefined
+  if (typeof document === "undefined") {
+    return undefined;
   }
   // ...
-}, [])
+}, []);
 ```
 
 Good check, but provider renders nothing on server. This means:
+
 - Hydration mismatch if toasts exist on mount
 - No SSR for toast content
 
@@ -359,20 +376,21 @@ export function registerInstance(
   components: ToastComponentsMap,
 ): void {
   // ...
-  entries.set(id, { id, manager, components })
-  emitChange()
+  entries.set(id, { id, manager, components });
+  emitChange();
 }
 ```
 
 No `unregisterInstance` function. If you create many toast instances dynamically, they'll never be cleaned up.
 
 **Fix:**
+
 ```typescript
 export function unregisterInstance(instance: object): void {
-  const id = instanceIds.get(instance)
+  const id = instanceIds.get(instance);
   if (id) {
-    entries.delete(id)
-    emitChange()
+    entries.delete(id);
+    emitChange();
   }
 }
 
@@ -382,10 +400,10 @@ return {
   dismiss,
   dismissAll,
   destroy() {
-    manager.destroy()
-    unregisterInstance(instance)
-  }
-}
+    manager.destroy();
+    unregisterInstance(instance);
+  },
+};
 ```
 
 ---
@@ -416,20 +434,23 @@ This is genuinely impressive TypeScript work.
 ### ⚠️ Minor Issues
 
 **1. `any` in ToastComponentsMap**
+
 ```typescript
-export type ToastComponentsMap = Record<string, ToastComponent<any>>
+export type ToastComponentsMap = Record<string, ToastComponent<any>>;
 ```
 
 The `any` is necessary for the map, but could be `unknown`:
+
 ```typescript
-export type ToastComponentsMap = Record<string, ToastComponent<any>>
+export type ToastComponentsMap = Record<string, ToastComponent<any>>;
 ```
 
 Actually, `any` is correct here because we need contravariance. This is fine.
 
 **2. Type Assertion in Provider**
+
 ```typescript
-const ToastView = components[toast.variant] as ToastComponent | undefined
+const ToastView = components[toast.variant] as ToastComponent | undefined;
 ```
 
 Could be avoided with better typing, but this is pragmatic.
@@ -443,29 +464,31 @@ Could be avoided with better typing, but this is pragmatic.
 **1. Double State Updates**
 
 Every toast operation triggers:
+
 1. Manager state update → `setState`
 2. Reconciliation effect → `setRenderedToasts`
 
 **Impact:** Two renders per operation.
 
 **Fix:** Combine into single state update:
+
 ```typescript
-const [renderedToasts, setRenderedToasts] = useState([])
+const [renderedToasts, setRenderedToasts] = useState([]);
 
 useEffect(() => {
   return manager.subscribe((state) => {
-    setRenderedToasts(prev => reconcile(prev, state.active))
-  })
-}, [manager])
+    setRenderedToasts((prev) => reconcile(prev, state.active));
+  });
+}, [manager]);
 ```
 
 **2. Registry Snapshot Recreation**
 
 ```typescript
 function emitChange(): void {
-  snapshot = Array.from(entries.values())  // New array every time
+  snapshot = Array.from(entries.values()); // New array every time
   for (const listener of listeners) {
-    listener()
+    listener();
   }
 }
 ```
@@ -475,15 +498,16 @@ Every toast operation in any instance recreates the snapshot array.
 **Impact:** Causes provider to re-render even if its instances didn't change.
 
 **Fix:** Only recreate if entries actually changed:
+
 ```typescript
 function emitChange(): void {
-  const newSnapshot = Array.from(entries.values())
+  const newSnapshot = Array.from(entries.values());
   if (shallowEqual(snapshot, newSnapshot)) {
-    return
+    return;
   }
-  snapshot = newSnapshot
+  snapshot = newSnapshot;
   for (const listener of listeners) {
-    listener()
+    listener();
   }
 }
 ```
@@ -492,35 +516,38 @@ function emitChange(): void {
 
 ```typescript
 const positionStyles: Record<ToastPosition, CSSProperties> = {
-  'top-left': { /* ... */ },
+  "top-left": {
+    /* ... */
+  },
   // ...
-}
+};
 ```
 
 This is fine (created once per module), but the container styles are recreated on every render:
 
 ```typescript
 const containerStyle: CSSProperties = {
-  position: 'absolute',
+  position: "absolute",
   // ...
   ...positionStyles[position],
-}
+};
 ```
 
 **Fix:** Memoize or move outside component:
+
 ```typescript
 const getContainerStyle = (position: ToastPosition): CSSProperties => ({
-  position: 'absolute',
-  display: 'flex',
-  gap: '0.5rem',
-  maxWidth: 'min(420px, calc(100vw - 1rem))',
-  padding: '0.5rem',
-  pointerEvents: 'none',
+  position: "absolute",
+  display: "flex",
+  gap: "0.5rem",
+  maxWidth: "min(420px, calc(100vw - 1rem))",
+  padding: "0.5rem",
+  pointerEvents: "none",
   ...positionStyles[position],
-})
+});
 
 // Cache:
-const containerStyleCache = new Map<ToastPosition, CSSProperties>()
+const containerStyleCache = new Map<ToastPosition, CSSProperties>();
 ```
 
 ---
@@ -530,89 +557,96 @@ const containerStyleCache = new Map<ToastPosition, CSSProperties>()
 ### ⚠️ Insufficient Coverage
 
 Current test:
+
 ```typescript
-it('renders and dismisses a toast', () => {
+it("renders and dismisses a toast", () => {
   // Basic smoke test
-})
+});
 ```
 
 **Missing tests:**
 
 **1. Type Inference Tests**
+
 ```typescript
 it('enforces required payload props', () => {
   const toast = createToast({
     success: ({ message }: { message: string }) => <div />,
   })
-  
+
   // @ts-expect-error - message is required
   toast.success()
-  
+
   // Should compile
   toast.success({ message: 'Hi' })
 })
 ```
 
 **2. Multiple Instances**
+
 ```typescript
 it('renders multiple toast instances independently', () => {
   const toast1 = createToast({ info: InfoToast })
   const toast2 = createToast({ success: SuccessToast })
-  
+
   render(
     <ToastProvider>
       <button onClick={() => toast1.info({ message: 'A' })}>A</button>
       <button onClick={() => toast2.success({ message: 'B' })}>B</button>
     </ToastProvider>
   )
-  
+
   // Both should render independently
 })
 ```
 
 **3. Lifecycle Phases**
+
 ```typescript
-it('transitions through enter -> visible -> exit phases', () => {
+it("transitions through enter -> visible -> exit phases", () => {
   // Test data-state attributes
-})
+});
 ```
 
 **4. Error Handling**
+
 ```typescript
 it('handles toast component errors gracefully', () => {
   const BrokenToast = () => {
     throw new Error('Broken!')
   }
-  
+
   const toast = createToast({ broken: BrokenToast })
-  
+
   render(<ToastProvider><App /></ToastProvider>)
-  
+
   toast.broken({})
-  
+
   // Should not crash app
 })
 ```
 
 **5. Memory Leaks**
+
 ```typescript
 it('cleans up registry on unmount', () => {
   const toast = createToast({ info: InfoToast })
   const { unmount } = render(<ToastProvider />)
-  
+
   toast.info({ message: 'Hi' })
   unmount()
-  
+
   // Registry should be cleaned up
   expect(getInstancesSnapshot()).toHaveLength(0)
 })
 ```
 
 **6. Hover Pause/Resume**
+
 ```typescript
-it('pauses on hover and resumes on leave', () => {
+it("pauses on hover and resumes on leave", () => {
   // Test interaction wiring
-})
+});
 ```
 
 ---
@@ -622,12 +656,14 @@ it('pauses on hover and resumes on leave', () => {
 ### 🔴 Critical
 
 **1. Missing Error Boundary**
+
 - **File:** `ToastProvider.tsx:220-230`
 - **Issue:** Toast component errors can crash entire app
 - **Impact:** Production crashes from user-defined components
 - **Fix:** Wrap each toast in error boundary
 
 **2. Registry Memory Leak**
+
 - **File:** `registry.ts:35-50`
 - **Issue:** No cleanup mechanism for instances
 - **Impact:** Memory leak if creating instances dynamically
@@ -636,24 +672,28 @@ it('pauses on hover and resumes on leave', () => {
 ### 🟡 Important
 
 **3. Double Renders on Toast Operations**
+
 - **File:** `ToastProvider.tsx:95-115`
 - **Issue:** Two state updates per operation
 - **Impact:** Unnecessary re-renders, potential performance issue
 - **Fix:** Combine state updates in subscription callback
 
 **4. No SSR Hydration Strategy**
+
 - **File:** `ToastProvider.tsx:200-210`
 - **Issue:** Provider renders nothing on server
 - **Impact:** Hydration mismatch if toasts on mount
 - **Fix:** Document SSR limitations or add hydration support
 
 **5. Hardcoded Transition Duration**
+
 - **File:** `ToastProvider.tsx:45`
 - **Issue:** `TRANSITION_DURATION_MS = 180` not configurable
 - **Impact:** Can't customize animations
 - **Fix:** Add to `CreateToastOptions`
 
 **6. No Reduced Motion Support**
+
 - **File:** `ToastProvider.tsx:130-140`
 - **Issue:** Ignores `prefers-reduced-motion`
 - **Impact:** Accessibility issue
@@ -662,18 +702,21 @@ it('pauses on hover and resumes on leave', () => {
 ### 🟢 Minor
 
 **7. Magic Number: Max Width**
+
 - **File:** `ToastProvider.tsx:175`
 - **Issue:** `min(420px, calc(100vw - 1rem))` hardcoded
 - **Impact:** Can't customize container width
 - **Fix:** Add to options or CSS variable
 
 **8. No Portal Target Customization**
+
 - **File:** `ToastProvider.tsx:205`
 - **Issue:** Always appends to `document.body`
 - **Impact:** Can't render in custom container
 - **Fix:** Add `portalTarget` option
 
 **9. Inline Styles for Transitions**
+
 - **File:** `ToastProvider.tsx:130-140`
 - **Issue:** Transition styles are inline, can't override
 - **Impact:** Limited customization
@@ -693,15 +736,15 @@ class ToastErrorBoundary extends React.Component<
   { hasError: boolean }
 > {
   state = { hasError: false }
-  
+
   static getDerivedStateFromError() {
     return { hasError: true }
   }
-  
+
   componentDidCatch(error: Error) {
     this.props.onError(error)
   }
-  
+
   render() {
     if (this.state.hasError) {
       return null  // Don't render broken toast
@@ -720,12 +763,12 @@ class ToastErrorBoundary extends React.Component<
 
 ```typescript
 export function unregisterInstance(instance: object): void {
-  const id = instanceIds.get(instance)
-  if (!id) return
-  
-  entries.delete(id)
-  instanceIds.delete(instance)
-  emitChange()
+  const id = instanceIds.get(instance);
+  if (!id) return;
+
+  entries.delete(id);
+  instanceIds.delete(instance);
+  emitChange();
 }
 
 // In createToast return value:
@@ -733,11 +776,12 @@ const instance = {
   ...methods,
   dismiss,
   dismissAll,
-  [Symbol.dispose]() {  // TC39 proposal
-    manager.destroy()
-    unregisterInstance(instance)
-  }
-}
+  [Symbol.dispose]() {
+    // TC39 proposal
+    manager.destroy();
+    unregisterInstance(instance);
+  },
+};
 ```
 
 **3. Combine State Updates**
@@ -745,30 +789,30 @@ const instance = {
 ```typescript
 useEffect(() => {
   return manager.subscribe((state) => {
-    setRenderedToasts(prev => {
+    setRenderedToasts((prev) => {
       // Reconcile in subscription callback
-      return reconcileToasts(prev, state.active)
-    })
-  })
-}, [manager])
+      return reconcileToasts(prev, state.active);
+    });
+  });
+}, [manager]);
 ```
 
 **4. Add Reduced Motion Support**
 
 ```typescript
 const prefersReducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)'
-).matches
+  "(prefers-reduced-motion: reduce)",
+).matches;
 
-const TRANSITION_DURATION_MS = prefersReducedMotion ? 0 : 180
+const TRANSITION_DURATION_MS = prefersReducedMotion ? 0 : 180;
 
 // Or:
 const transitionStyle = prefersReducedMotion
   ? {}
   : {
       transition: `opacity 180ms ease, transform 180ms ease`,
-      willChange: 'opacity, transform',
-    }
+      willChange: "opacity, transform",
+    };
 ```
 
 ### Medium Priority
@@ -778,19 +822,19 @@ const transitionStyle = prefersReducedMotion
 ```typescript
 interface CreateToastOptions {
   // ... existing
-  transitionDuration?: number
+  transitionDuration?: number;
 }
 
 // In provider:
-const duration = options.transitionDuration ?? 180
+const duration = options.transitionDuration ?? 180;
 ```
 
 **6. Add Portal Target Option**
 
 ```typescript
 interface ToastProviderProps {
-  children: ReactNode
-  portalTarget?: HTMLElement | (() => HTMLElement)
+  children: ReactNode;
+  portalTarget?: HTMLElement | (() => HTMLElement);
 }
 ```
 
@@ -798,17 +842,19 @@ interface ToastProviderProps {
 
 ```typescript
 function emitChange(): void {
-  const newSnapshot = Array.from(entries.values())
-  
+  const newSnapshot = Array.from(entries.values());
+
   // Only update if actually changed
-  if (snapshot.length === newSnapshot.length &&
-      snapshot.every((entry, i) => entry === newSnapshot[i])) {
-    return
+  if (
+    snapshot.length === newSnapshot.length &&
+    snapshot.every((entry, i) => entry === newSnapshot[i])
+  ) {
+    return;
   }
-  
-  snapshot = newSnapshot
+
+  snapshot = newSnapshot;
   for (const listener of listeners) {
-    listener()
+    listener();
   }
 }
 ```
@@ -818,13 +864,14 @@ function emitChange(): void {
 **8. Add JSDoc Comments**
 
 Document the type inference magic:
+
 ```typescript
 /**
  * Creates a typed toast instance from component definitions.
- * 
+ *
  * Type inference automatically determines required/optional payload props
  * from your component prop types.
- * 
+ *
  * @example
  * const toast = createToast({
  *   success: ({ message }: { message: string }) => <div>{message}</div>,
@@ -832,7 +879,7 @@ Document the type inference magic:
  *     <div>{message}</div>
  *   ),
  * })
- * 
+ *
  * toast.success({ message: 'Saved!' })  // message required
  * toast.error({ message: 'Failed' })     // retry optional
  */
@@ -841,7 +888,7 @@ Document the type inference magic:
 **9. Export Utility Types**
 
 ```typescript
-export type { ExtractPayload, RequiredKeys, VariantMethod }
+export type { ExtractPayload, RequiredKeys, VariantMethod };
 ```
 
 Users might want these for advanced use cases.
@@ -850,12 +897,12 @@ Users might want these for advanced use cases.
 
 ```typescript
 interface CreateToastOptions {
-  debug?: boolean
+  debug?: boolean;
 }
 
 // Log lifecycle events:
 if (options.debug) {
-  console.log('[toast] Phase transition:', toast.id, phase)
+  console.log("[toast] Phase transition:", toast.id, phase);
 }
 ```
 
@@ -873,47 +920,48 @@ Current approach has 4 effects managing lifecycle. Could be reduced to 2:
 // Effect 1: Subscribe to manager
 useEffect(() => {
   return manager.subscribe((state) => {
-    setRenderedToasts(prev => reconcileWithPhases(prev, state.active))
-  })
-}, [manager])
+    setRenderedToasts((prev) => reconcileWithPhases(prev, state.active));
+  });
+}, [manager]);
 
 // Effect 2: Cleanup exit timers
 useEffect(() => {
   return () => {
     for (const handle of exitTimers.current.values()) {
-      clearTimeout(handle)
+      clearTimeout(handle);
     }
-  }
-}, [])
+  };
+}, []);
 ```
 
 **2. Position Bucket Calculation**
 
 ```typescript
 function getPositionBuckets(toasts) {
-  const buckets = new Map()
+  const buckets = new Map();
   for (const item of toasts) {
-    const position = item.toast.position
-    const current = buckets.get(position)
+    const position = item.toast.position;
+    const current = buckets.get(position);
     if (current) {
-      current.push(item)
-      continue
+      current.push(item);
+      continue;
     }
-    buckets.set(position, [item])
+    buckets.set(position, [item]);
   }
-  return buckets
+  return buckets;
 }
 ```
 
 Could use `Array.reduce`:
+
 ```typescript
 function getPositionBuckets(toasts) {
   return toasts.reduce((buckets, item) => {
-    const position = item.toast.position
-    const current = buckets.get(position) ?? []
-    buckets.set(position, [...current, item])
-    return buckets
-  }, new Map())
+    const position = item.toast.position;
+    const current = buckets.get(position) ?? [];
+    buckets.set(position, [...current, item]);
+    return buckets;
+  }, new Map());
 }
 ```
 
@@ -951,12 +999,14 @@ export function useToast() {
 ```
 
 **Pros:**
+
 - No global registry
 - More React-idiomatic
 - Easier to test
 - No memory leaks
 
 **Cons:**
+
 - Requires passing instance
 - Can't use toast outside React tree (but is this needed?)
 
@@ -973,10 +1023,12 @@ export function useToast() {
 ```
 
 **Pros:**
+
 - Explicit dependency
 - No global state
 
 **Cons:**
+
 - Awkward API
 - Requires prop drilling
 
@@ -1011,11 +1063,13 @@ const toast = createToast(components)
 ### vs. react-hot-toast
 
 **Similarities:**
+
 - Factory pattern
 - Headless approach
 - TypeScript-first
 
 **Differences:**
+
 - react-hot-toast has simpler lifecycle (no three phases)
 - react-hot-toast uses context, not registry
 - twist-toast has better type inference
@@ -1023,10 +1077,12 @@ const toast = createToast(components)
 ### vs. sonner
 
 **Similarities:**
+
 - Modern React patterns
 - Smooth animations
 
 **Differences:**
+
 - sonner has opinionated styling
 - sonner uses context
 - twist-toast is more flexible
@@ -1034,10 +1090,12 @@ const toast = createToast(components)
 ### vs. react-toastify
 
 **Similarities:**
+
 - Portal rendering
 - Position-based layout
 
 **Differences:**
+
 - react-toastify is class-based
 - react-toastify has built-in styles
 - twist-toast has better TypeScript
@@ -1061,18 +1119,13 @@ The React package is production-ready after fixing critical issues (error bounda
 ### Recommended Actions Before v1.0
 
 **Must Fix:**
+
 1. Add error boundary around toast components
 2. Fix registry memory leak
 
-**Should Fix:**
-3. Combine state updates to avoid double renders
-4. Add reduced motion support
-5. Add more comprehensive tests
+**Should Fix:** 3. Combine state updates to avoid double renders 4. Add reduced motion support 5. Add more comprehensive tests
 
-**Nice to Have:**
-6. Make transition duration configurable
-7. Add portal target option
-8. Add JSDoc comments
+**Nice to Have:** 6. Make transition duration configurable 7. Add portal target option 8. Add JSDoc comments
 
 ### Estimated Refactoring Effort
 
@@ -1092,6 +1145,7 @@ The React package is production-ready after fixing critical issues (error bounda
 The React package demonstrates excellent TypeScript skills and clean React patterns. The type inference system is genuinely impressive and provides great DX.
 
 The main concerns are:
+
 1. **Lifecycle complexity** - Three-phase system is sophisticated but complex
 2. **Registry pattern** - Clever but may not scale, potential memory leaks
 3. **Test coverage** - Insufficient for production

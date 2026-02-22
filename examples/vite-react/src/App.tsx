@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { toast } from "./lib/toast";
 
-
-
 function App() {
   const [lastToastId, setLastToastId] = useState<string | null>(null);
 

@@ -14,12 +14,14 @@
 The core package demonstrates solid functional programming principles with clean separation of concerns. The architecture is well-thought-out, testable, and genuinely framework-agnostic. However, there are opportunities to simplify the implementation and remove unnecessary complexity.
 
 **Key Strengths:**
+
 - Pure functional state updates
 - Excellent testability with dependency injection
 - Clean API surface
 - Proper timer lifecycle management
 
 **Key Concerns:**
+
 - Over-engineered timer synchronization
 - Unnecessary state duplication (`remainingMs` vs computed)
 - Missing edge case handling
@@ -32,32 +34,37 @@ The core package demonstrates solid functional programming principles with clean
 ### ✅ Strengths
 
 **1. Functional Closure Pattern**
+
 ```typescript
 export function createToastManager(options) {
   let state: InternalState = { ... }
   const timers = new Map()
   const listeners = new Set()
-  
+
   return { add, dismiss, ... }
 }
 ```
+
 - Clean encapsulation without class overhead
 - Private state via closure
 - Testable through dependency injection (`now`, `generateId`)
 
 **2. Immutable State Updates**
+
 ```typescript
 function addToast(state: InternalState, toast: ToastRecord): InternalState {
-  const byId = new Map(state.byId)
-  byId.set(toast.id, toast)
-  return { byId, order: [...state.order, toast.id] }
+  const byId = new Map(state.byId);
+  byId.set(toast.id, toast);
+  return { byId, order: [...state.order, toast.id] };
 }
 ```
+
 - Pure functions for state transitions
 - Predictable behavior
 - Easy to reason about
 
 **3. Separation of Concerns**
+
 - Core owns behavior logic only
 - No UI/rendering concerns
 - No framework dependencies
@@ -72,9 +79,9 @@ Current implementation has `syncTimers()` called after every mutation:
 ```typescript
 function add(input: ToastInput): string {
   // ... mutation logic
-  syncTimers()  // Full scan of all timers
-  notify()
-  return id
+  syncTimers(); // Full scan of all timers
+  notify();
+  return id;
 }
 ```
 
@@ -83,6 +90,7 @@ function add(input: ToastInput): string {
 **Impact:** O(n) complexity on every mutation, unnecessary work
 
 **Better approach:** Only sync timers when actually needed:
+
 - On add: Only start timer for new toast if it's active
 - On dismiss: Only clear timer for dismissed toast
 - On queue promotion: Start timer for newly active toast
@@ -91,10 +99,10 @@ function add(input: ToastInput): string {
 
 ```typescript
 interface ToastRecord {
-  duration: number      // Original duration
-  createdAt: number     // When created
-  remainingMs: number   // Duplicates information
-  paused: boolean
+  duration: number; // Original duration
+  createdAt: number; // When created
+  remainingMs: number; // Duplicates information
+  paused: boolean;
 }
 ```
 
@@ -104,21 +112,22 @@ interface ToastRecord {
 
 ```typescript
 interface ToastRecord {
-  duration: number
-  createdAt: number
-  paused: boolean
-  pausedAt?: number      // When paused (if paused)
-  totalPausedMs: number  // Accumulated pause time
+  duration: number;
+  createdAt: number;
+  paused: boolean;
+  pausedAt?: number; // When paused (if paused)
+  totalPausedMs: number; // Accumulated pause time
 }
 
 // Compute remaining time:
 function getRemainingMs(toast: ToastRecord, now: number): number {
-  const elapsed = now - toast.createdAt - toast.totalPausedMs
-  return Math.max(0, toast.duration - elapsed)
+  const elapsed = now - toast.createdAt - toast.totalPausedMs;
+  return Math.max(0, toast.duration - elapsed);
 }
 ```
 
 **Benefits:**
+
 - Single source of truth
 - No sync issues
 - Simpler pause/resume logic
@@ -126,27 +135,32 @@ function getRemainingMs(toast: ToastRecord, now: number): number {
 **3. Missing Edge Cases**
 
 **a) Concurrent timer callbacks:**
+
 ```typescript
 const handle = setTimeout(() => {
-  dismiss(toast.id)  // What if dismiss called manually first?
-}, toast.remainingMs)
+  dismiss(toast.id); // What if dismiss called manually first?
+}, toast.remainingMs);
 ```
 
 Current code handles this (checks `state.byId.has(id)`), but not explicitly documented.
 
 **b) Negative durations:**
+
 ```typescript
-const duration = Math.max(0, input.duration)
+const duration = Math.max(0, input.duration);
 ```
+
 Good! But should this be validated at type level?
 
 **c) Zero-duration toasts:**
 Treated as "sticky" (never auto-dismiss). This is correct but undocumented.
 
 **d) maxToasts = 0:**
+
 ```typescript
-const maxToasts = Math.max(1, options.maxToasts ?? 5)
+const maxToasts = Math.max(1, options.maxToasts ?? 5);
 ```
+
 Good defensive programming, but should this throw instead?
 
 ---
@@ -154,7 +168,9 @@ Good defensive programming, but should this throw instead?
 ## SOLID Principles Analysis
 
 ### ✅ Single Responsibility Principle
+
 Each function has one clear purpose:
+
 - `addToast` - Add to state
 - `syncTimers` - Manage timer lifecycle
 - `notify` - Notify subscribers
@@ -162,7 +178,9 @@ Each function has one clear purpose:
 **Grade: A**
 
 ### ✅ Open/Closed Principle
+
 Manager is closed for modification but open for extension via:
+
 - Custom `generateId`
 - Custom `now` function
 - Dedupe strategies
@@ -170,16 +188,19 @@ Manager is closed for modification but open for extension via:
 **Grade: A**
 
 ### ⚠️ Liskov Substitution Principle
+
 Not applicable (no inheritance), but interface contracts are solid.
 
 **Grade: N/A**
 
 ### ✅ Interface Segregation Principle
+
 `ToastManager` interface is minimal and cohesive. No fat interfaces.
 
 **Grade: A**
 
 ### ✅ Dependency Inversion Principle
+
 Depends on abstractions (`now`, `generateId`) not concretions.
 
 **Grade: A**
@@ -189,35 +210,44 @@ Depends on abstractions (`now`, `generateId`) not concretions.
 ## Functional Programming Principles
 
 ### ✅ Pure Functions
+
 State update helpers are pure:
+
 ```typescript
-function addToast(state, toast): InternalState
-function removeToast(state, id): InternalState
+function addToast(state, toast): InternalState;
+function removeToast(state, id): InternalState;
 ```
 
 ### ⚠️ Immutability
+
 Mostly immutable, but `state` is mutated in place:
+
 ```typescript
-state = addToast(state, toast)  // Reassignment, not mutation
+state = addToast(state, toast); // Reassignment, not mutation
 ```
+
 This is acceptable in closure scope, but could be more explicit.
 
 ### ✅ Function Composition
+
 Good separation allows easy composition:
+
 ```typescript
-state = removeToast(state, id)
-syncTimers()
-notify()
+state = removeToast(state, id);
+syncTimers();
+notify();
 ```
 
 ### ⚠️ Side Effects
+
 Side effects (timers, notifications) are isolated but not explicitly marked. Consider:
+
 ```typescript
 // Pure
-function computeNextState(state, action): InternalState
+function computeNextState(state, action): InternalState;
 
 // Impure (side effects)
-function performSideEffects(prevState, nextState): void
+function performSideEffects(prevState, nextState): void;
 ```
 
 ---
@@ -225,42 +255,46 @@ function performSideEffects(prevState, nextState): void
 ## Type Safety Analysis
 
 ### ✅ Strong Typing
+
 All public APIs are properly typed.
 
 ### ⚠️ Improvements Needed
 
 **1. Stricter Input Validation**
+
 ```typescript
 export interface ToastInput {
-  id?: string
-  variant: string        // Should be generic or branded type
-  payload: Record<string, unknown>  // Too loose
-  duration: number       // Should be non-negative
-  position: ToastPosition
-  dismissOnClick: boolean
-  role: ToastRole
+  id?: string;
+  variant: string; // Should be generic or branded type
+  payload: Record<string, unknown>; // Too loose
+  duration: number; // Should be non-negative
+  position: ToastPosition;
+  dismissOnClick: boolean;
+  role: ToastRole;
 }
 ```
 
 **Better:**
+
 ```typescript
 export interface ToastInput<TPayload = unknown> {
-  id?: string
-  variant: string
-  payload: TPayload  // Generic for type safety
-  duration: number & { readonly __brand: 'NonNegative' }  // Branded type
-  position: ToastPosition
-  dismissOnClick: boolean
-  role: ToastRole
+  id?: string;
+  variant: string;
+  payload: TPayload; // Generic for type safety
+  duration: number & { readonly __brand: "NonNegative" }; // Branded type
+  position: ToastPosition;
+  dismissOnClick: boolean;
+  role: ToastRole;
 }
 ```
 
 **2. Readonly Where Appropriate**
+
 ```typescript
 export interface ToastState {
-  readonly all: readonly ToastRecord[]
-  readonly active: readonly ToastRecord[]
-  readonly queued: readonly ToastRecord[]
+  readonly all: readonly ToastRecord[];
+  readonly active: readonly ToastRecord[];
+  readonly queued: readonly ToastRecord[];
 }
 ```
 
@@ -273,46 +307,50 @@ Prevents accidental mutations by consumers.
 ### ✅ Good Decisions
 
 **1. Map for O(1) lookups:**
+
 ```typescript
-byId: Map<string, ToastRecord>
+byId: Map<string, ToastRecord>;
 ```
 
 **2. Separate order array:**
+
 ```typescript
 order: string[]
 ```
+
 Preserves insertion order without sorting.
 
 ### ⚠️ Optimization Opportunities
 
 **1. Unnecessary Array Copies**
+
 ```typescript
 function toOrderedToasts(state: InternalState): ToastRecord[] {
-  const all: ToastRecord[] = []
+  const all: ToastRecord[] = [];
   for (const id of state.order) {
-    const toast = state.byId.get(id)
+    const toast = state.byId.get(id);
     if (toast) {
-      all.push(toast)
+      all.push(toast);
     }
   }
-  return all
+  return all;
 }
 ```
 
 Called on every `getState()`, which is called on every mutation. Consider caching:
 
 ```typescript
-let cachedSnapshot: ToastState | null = null
+let cachedSnapshot: ToastState | null = null;
 
 function getState(): ToastState {
   if (!cachedSnapshot) {
-    cachedSnapshot = createStateSnapshot(state, maxToasts)
+    cachedSnapshot = createStateSnapshot(state, maxToasts);
   }
-  return cachedSnapshot
+  return cachedSnapshot;
 }
 
 function invalidateCache(): void {
-  cachedSnapshot = null
+  cachedSnapshot = null;
 }
 ```
 
@@ -326,6 +364,7 @@ As mentioned, full scan on every mutation is wasteful.
 ### ✅ Good Coverage
 
 Tests cover:
+
 - Add and notify
 - Queue limits
 - Dedupe behaviors
@@ -335,6 +374,7 @@ Tests cover:
 ### ⚠️ Missing Tests
 
 **1. Edge Cases:**
+
 - Adding toast while timer callback is executing
 - Pausing already-paused toast
 - Resuming non-paused toast
@@ -343,39 +383,42 @@ Tests cover:
 - Very large maxToasts (e.g., 1000)
 
 **2. Concurrent Operations:**
+
 ```typescript
-it('handles rapid add/dismiss cycles', () => {
-  const manager = createToastManager()
-  const id1 = manager.add(createInput())
-  manager.dismiss(id1)
-  const id2 = manager.add(createInput({ id: id1 }))
-  expect(id2).toBe(id1)
-})
+it("handles rapid add/dismiss cycles", () => {
+  const manager = createToastManager();
+  const id1 = manager.add(createInput());
+  manager.dismiss(id1);
+  const id2 = manager.add(createInput({ id: id1 }));
+  expect(id2).toBe(id1);
+});
 ```
 
 **3. Memory Leaks:**
+
 ```typescript
-it('cleans up timers on destroy', () => {
-  const manager = createToastManager()
-  manager.add(createInput({ duration: 10000 }))
-  manager.destroy()
+it("cleans up timers on destroy", () => {
+  const manager = createToastManager();
+  manager.add(createInput({ duration: 10000 }));
+  manager.destroy();
   // How to verify timers are cleared?
   // Need to spy on clearTimeout
-})
+});
 ```
 
 **4. Subscription Edge Cases:**
+
 ```typescript
-it('handles unsubscribe during notification', () => {
-  const manager = createToastManager()
-  let unsub: (() => void) | null = null
-  
+it("handles unsubscribe during notification", () => {
+  const manager = createToastManager();
+  let unsub: (() => void) | null = null;
+
   unsub = manager.subscribe(() => {
-    unsub?.()  // Unsubscribe during callback
-  })
-  
-  manager.add(createInput())  // Should not throw
-})
+    unsub?.(); // Unsubscribe during callback
+  });
+
+  manager.add(createInput()); // Should not throw
+});
 ```
 
 ---
@@ -385,16 +428,17 @@ it('handles unsubscribe during notification', () => {
 ### ✅ Excellent API Surface
 
 **Minimal and complete:**
+
 ```typescript
 interface ToastManager {
-  add(input: ToastInput): string
-  dismiss(id: string): void
-  dismissAll(): void
-  pause(id: string): void
-  resume(id: string): void
-  subscribe(listener: ToastStateListener): () => void
-  getState(): ToastState
-  destroy(): void
+  add(input: ToastInput): string;
+  dismiss(id: string): void;
+  dismissAll(): void;
+  pause(id: string): void;
+  resume(id: string): void;
+  subscribe(listener: ToastStateListener): () => void;
+  getState(): ToastState;
+  destroy(): void;
 }
 ```
 
@@ -403,18 +447,21 @@ No unnecessary methods, all essential operations covered.
 ### ⚠️ Potential Additions for Future
 
 **1. Batch Operations:**
+
 ```typescript
 addMany(inputs: ToastInput[]): string[]
 dismissMany(ids: string[]): void
 ```
 
 **2. Query Methods:**
+
 ```typescript
 has(id: string): boolean
 get(id: string): ToastRecord | undefined
 ```
 
 **3. Update Method:**
+
 ```typescript
 update(id: string, patch: Partial<ToastInput>): void
 ```
@@ -430,18 +477,21 @@ update(id: string, patch: Partial<ToastInput>): void
 ### 🟡 Important
 
 **1. Timer Synchronization Over-Engineering**
+
 - **File:** `toast-manager.ts:145-175`
 - **Issue:** `syncTimers()` does full scan on every mutation
 - **Impact:** Unnecessary O(n) work, harder to maintain
 - **Fix:** Targeted timer management per operation
 
 **2. Redundant State (`remainingMs`)**
+
 - **File:** `types.ts:24`, `toast-manager.ts:190-195`
 - **Issue:** Duplicates information, creates sync burden
 - **Impact:** More complex pause/resume, potential bugs
 - **Fix:** Compute from `duration`, `createdAt`, `totalPausedMs`
 
 **3. Missing Input Validation**
+
 - **File:** `toast-manager.ts:180-185`
 - **Issue:** No validation that `position`, `role` are valid
 - **Impact:** Runtime errors if invalid values passed
@@ -450,23 +500,27 @@ update(id: string, patch: Partial<ToastInput>): void
 ### 🟢 Minor
 
 **1. Magic Number: maxToasts Default**
+
 - **File:** `toast-manager.ts:95`
 - **Issue:** `5` is hardcoded, not documented
 - **Fix:** Export as constant: `export const DEFAULT_MAX_TOASTS = 5`
 
 **2. Undocumented Behavior: Zero Duration**
+
 - **File:** `toast-manager.ts:186`
 - **Issue:** `duration: 0` means "sticky" but not documented
 - **Impact:** Confusing for consumers
 - **Fix:** Add JSDoc comment
 
 **3. No Logging/Debugging Support**
+
 - **File:** All
 - **Issue:** No way to debug timer issues in production
 - **Impact:** Hard to diagnose issues
 - **Fix:** Optional debug callback in options
 
 **4. Default ID Generation Collision Risk**
+
 - **File:** `toast-manager.ts:88-90`
 - **Issue:** `Math.random()` has collision risk at scale
 - **Impact:** Low probability but possible
@@ -484,42 +538,48 @@ Replace `syncTimers()` with targeted operations:
 
 ```typescript
 function startTimerIfNeeded(id: string): void {
-  const toast = state.byId.get(id)
-  if (!toast || timers.has(id) || toast.paused || 
-      toast.duration <= 0 || !isActiveToast(id)) {
-    return
+  const toast = state.byId.get(id);
+  if (
+    !toast ||
+    timers.has(id) ||
+    toast.paused ||
+    toast.duration <= 0 ||
+    !isActiveToast(id)
+  ) {
+    return;
   }
-  
-  const remaining = getRemainingMs(toast, now())
-  if (remaining <= 0) return
-  
-  const handle = setTimeout(() => dismiss(id), remaining)
-  timers.set(id, { handle, startedAt: now() })
+
+  const remaining = getRemainingMs(toast, now());
+  if (remaining <= 0) return;
+
+  const handle = setTimeout(() => dismiss(id), remaining);
+  timers.set(id, { handle, startedAt: now() });
 }
 
 function stopTimer(id: string): void {
-  const timer = timers.get(id)
+  const timer = timers.get(id);
   if (timer) {
-    clearTimeout(timer.handle)
-    timers.delete(id)
+    clearTimeout(timer.handle);
+    timers.delete(id);
   }
 }
 ```
 
 Then in operations:
+
 ```typescript
 function add(input: ToastInput): string {
   // ... add logic
-  startTimerIfNeeded(id)
-  notify()
-  return id
+  startTimerIfNeeded(id);
+  notify();
+  return id;
 }
 
 function dismiss(id: string): void {
-  stopTimer(id)
-  state = removeToast(state, id)
-  promoteQueuedToast()  // Start timer for newly active
-  notify()
+  stopTimer(id);
+  state = removeToast(state, id);
+  promoteQueuedToast(); // Start timer for newly active
+  notify();
 }
 ```
 
@@ -527,26 +587,26 @@ function dismiss(id: string): void {
 
 ```typescript
 interface ToastRecord {
-  id: string
-  variant: string
-  payload: Record<string, unknown>
-  duration: number
-  position: ToastPosition
-  dismissOnClick: boolean
-  role: ToastRole
-  createdAt: number
-  paused: boolean
-  pausedAt?: number
-  totalPausedMs: number
+  id: string;
+  variant: string;
+  payload: Record<string, unknown>;
+  duration: number;
+  position: ToastPosition;
+  dismissOnClick: boolean;
+  role: ToastRole;
+  createdAt: number;
+  paused: boolean;
+  pausedAt?: number;
+  totalPausedMs: number;
 }
 
 function getRemainingMs(toast: ToastRecord, now: number): number {
   if (toast.paused && toast.pausedAt) {
-    const elapsed = toast.pausedAt - toast.createdAt - toast.totalPausedMs
-    return Math.max(0, toast.duration - elapsed)
+    const elapsed = toast.pausedAt - toast.createdAt - toast.totalPausedMs;
+    return Math.max(0, toast.duration - elapsed);
   }
-  const elapsed = now - toast.createdAt - toast.totalPausedMs
-  return Math.max(0, toast.duration - elapsed)
+  const elapsed = now - toast.createdAt - toast.totalPausedMs;
+  return Math.max(0, toast.duration - elapsed);
 }
 ```
 
@@ -555,13 +615,13 @@ function getRemainingMs(toast: ToastRecord, now: number): number {
 ```typescript
 function validateInput(input: ToastInput): void {
   if (input.duration < 0) {
-    throw new Error('duration must be non-negative')
+    throw new Error("duration must be non-negative");
   }
   if (!VALID_POSITIONS.includes(input.position)) {
-    throw new Error(`Invalid position: ${input.position}`)
+    throw new Error(`Invalid position: ${input.position}`);
   }
   if (!VALID_ROLES.includes(input.role)) {
-    throw new Error(`Invalid role: ${input.role}`)
+    throw new Error(`Invalid role: ${input.role}`);
   }
 }
 ```
@@ -571,34 +631,36 @@ function validateInput(input: ToastInput): void {
 **4. Add Readonly Modifiers**
 
 Make state snapshots immutable:
+
 ```typescript
 export interface ToastState {
-  readonly all: readonly ToastRecord[]
-  readonly active: readonly ToastRecord[]
-  readonly queued: readonly ToastRecord[]
+  readonly all: readonly ToastRecord[];
+  readonly active: readonly ToastRecord[];
+  readonly queued: readonly ToastRecord[];
 }
 ```
 
 **5. Export Constants**
 
 ```typescript
-export const DEFAULT_MAX_TOASTS = 5
-export const DEFAULT_DEDUPE: DedupeBehavior = 'ignore'
+export const DEFAULT_MAX_TOASTS = 5;
+export const DEFAULT_DEDUPE: DedupeBehavior = "ignore";
 ```
 
 **6. Add JSDoc Comments**
 
 Document public API and non-obvious behavior:
+
 ```typescript
 /**
  * Creates a toast manager instance.
- * 
+ *
  * @param options - Configuration options
  * @param options.maxToasts - Maximum visible toasts (default: 5, min: 1)
  * @param options.dedupe - How to handle duplicate IDs (default: 'ignore')
  * @param options.now - Time function for testing (default: Date.now)
  * @param options.generateId - ID generator for testing
- * 
+ *
  * @example
  * const manager = createToastManager({ maxToasts: 3 })
  * const id = manager.add({
@@ -618,10 +680,10 @@ Document public API and non-obvious behavior:
 
 ```typescript
 function defaultGenerateId(now: () => number): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
-  return `toast-${now()}-${Math.random().toString(36).slice(2, 10)}`
+  return `toast-${now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 ```
 
@@ -630,12 +692,12 @@ function defaultGenerateId(now: () => number): string {
 ```typescript
 interface CreateToastManagerOptions {
   // ... existing
-  debug?: (event: string, data: unknown) => void
+  debug?: (event: string, data: unknown) => void;
 }
 
 // Usage:
 if (options.debug) {
-  options.debug('toast:added', { id, variant })
+  options.debug("toast:added", { id, variant });
 }
 ```
 
@@ -652,31 +714,33 @@ if (options.debug) {
 **1. `toOrderedToasts` + `createStateSnapshot`**
 
 These could be combined:
+
 ```typescript
 function getState(): ToastState {
-  const all: ToastRecord[] = []
+  const all: ToastRecord[] = [];
   for (const id of state.order) {
-    const toast = state.byId.get(id)
-    if (toast) all.push(toast)
+    const toast = state.byId.get(id);
+    if (toast) all.push(toast);
   }
-  
+
   return {
     all,
     active: all.slice(0, maxToasts),
     queued: all.slice(maxToasts),
-  }
+  };
 }
 ```
 
 **2. `isActiveToast` Helper**
 
 Only used in one place. Inline it:
+
 ```typescript
 function pause(id: string): void {
-  const toast = state.byId.get(id)
-  const isActive = getState().active.some(t => t.id === id)
+  const toast = state.byId.get(id);
+  const isActive = getState().active.some((t) => t.id === id);
   if (!toast || toast.paused || toast.duration <= 0 || !isActive) {
-    return
+    return;
   }
   // ...
 }
@@ -690,31 +754,35 @@ function pause(id: string): void {
 
 **1. Multi-Framework Support**
 Core is truly framework-agnostic. Can easily add:
+
 - Vue adapter
 - Svelte adapter
 - Angular adapter
 
 **2. Feature Extensions**
 Easy to add without breaking changes:
+
 - Priority levels (add `priority` to `ToastRecord`)
 - Grouping (add `group` to `ToastRecord`)
 - Progress tracking (add `progress` to `ToastRecord`)
 
 **3. Persistence**
 Could add persistence layer without core changes:
+
 ```typescript
-const manager = createToastManager()
-const persisted = withPersistence(manager, localStorage)
+const manager = createToastManager();
+const persisted = withPersistence(manager, localStorage);
 ```
 
 ### ⚠️ Potential Breaking Changes Needed
 
 **1. Generic Payload Type**
 Current `payload: Record<string, unknown>` is too loose. Future version should:
+
 ```typescript
 export interface ToastInput<TPayload = unknown> {
   // ...
-  payload: TPayload
+  payload: TPayload;
 }
 ```
 
@@ -728,16 +796,19 @@ Adding `readonly` modifiers is technically breaking (consumers mutating state wo
 ## Comparison with Industry Standards
 
 ### vs. react-hot-toast
+
 - **Simpler:** No built-in animations, smaller API
 - **More flexible:** Truly headless, no CSS opinions
 - **Better typed:** Stronger type inference in React adapter
 
 ### vs. sonner
+
 - **More explicit:** No magic, clear behavior
 - **More testable:** Dependency injection built-in
 - **Less opinionated:** No default styling
 
 ### vs. react-toastify
+
 - **Smaller:** No runtime dependencies
 - **Cleaner:** Functional vs class-based
 - **More modern:** TypeScript-first
@@ -761,14 +832,17 @@ The core package is production-ready with minor improvements.
 ### Recommended Actions Before v1.0
 
 **Must Fix:**
+
 - None (already production-ready)
 
 **Should Fix:**
+
 - Simplify timer synchronization
 - Remove `remainingMs` redundancy
 - Add input validation
 
 **Nice to Have:**
+
 - Add JSDoc comments
 - Export constants
 - Add readonly modifiers

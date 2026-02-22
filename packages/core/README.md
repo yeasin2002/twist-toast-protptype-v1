@@ -17,22 +17,22 @@ It is designed to be consumed by adapter packages such as `@twist-toast/react`.
 ## Usage
 
 ```ts
-import { createToastManager } from '@twist-toast/core'
+import { createToastManager } from "@twist-toast/core";
 
-const manager = createToastManager({ maxToasts: 5 })
+const manager = createToastManager({ maxToasts: 5 });
 
 const id = manager.add({
-  variant: 'info',
-  payload: { message: 'Saved' },
+  variant: "info",
+  payload: { message: "Saved" },
   duration: 3000,
-  position: 'top-right',
+  position: "top-right",
   dismissOnClick: true,
-  role: 'status',
-})
+  role: "status",
+});
 
-manager.pause(id)
-manager.resume(id)
-manager.dismiss(id)
+manager.pause(id);
+manager.resume(id);
+manager.dismiss(id);
 ```
 
 ## Build

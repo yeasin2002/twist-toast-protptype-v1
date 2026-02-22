@@ -1,57 +1,58 @@
-import { createToastManager } from '@twist-toast/core'
-import type { CreateToastManagerOptions, ToastInput } from '@twist-toast/core'
-import { registerInstance } from './registry'
+import type { CreateToastManagerOptions, ToastInput } from "@twist-toast/core";
+import {
+  DEFAULT_DISMISS_ON_CLICK,
+  DEFAULT_DURATION,
+  DEFAULT_POSITION,
+  DEFAULT_ROLE,
+  createToastManager,
+} from "@twist-toast/core";
+import { registerInstance, unregisterInstance } from "./registry";
 import type {
   CreateToastOptions,
   ToastCallOptions,
   ToastComponentsMap,
   ToastInstance,
-} from './types'
-
-const DEFAULT_DURATION = 4000
-const DEFAULT_POSITION = 'top-right'
-const DEFAULT_DISMISS_ON_CLICK = true
-const DEFAULT_ROLE = 'status'
+} from "./types";
 
 function toPayload(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object') {
-    return {}
+  if (!value || typeof value !== "object") {
+    return {};
   }
 
-  return value as Record<string, unknown>
+  return value as Record<string, unknown>;
 }
 
 export function createToast<TComponents extends ToastComponentsMap>(
   components: TComponents,
   options: CreateToastOptions = {},
 ): ToastInstance<TComponents> {
-  const managerOptions: CreateToastManagerOptions = {}
+  const managerOptions: CreateToastManagerOptions = {};
 
   if (options.maxToasts !== undefined) {
-    managerOptions.maxToasts = options.maxToasts
+    managerOptions.maxToasts = options.maxToasts;
   }
   if (options.dedupe !== undefined) {
-    managerOptions.dedupe = options.dedupe
+    managerOptions.dedupe = options.dedupe;
   }
   if (options.now !== undefined) {
-    managerOptions.now = options.now
+    managerOptions.now = options.now;
   }
   if (options.generateId !== undefined) {
-    managerOptions.generateId = options.generateId
+    managerOptions.generateId = options.generateId;
   }
 
-  const manager = createToastManager(managerOptions)
+  const manager = createToastManager(managerOptions);
 
   const defaults = {
     duration: options.defaultDuration ?? DEFAULT_DURATION,
     position: options.defaultPosition ?? DEFAULT_POSITION,
     dismissOnClick: options.defaultDismissOnClick ?? DEFAULT_DISMISS_ON_CLICK,
     role: options.defaultRole ?? DEFAULT_ROLE,
-  } as const
+  } as const;
 
   const methods = {} as {
-    [K in keyof TComponents]: ToastInstance<TComponents>[K]
-  }
+    [K in keyof TComponents]: ToastInstance<TComponents>[K];
+  };
 
   for (const variant of Object.keys(components) as Array<keyof TComponents>) {
     const method = (payload: unknown, callOptions?: ToastCallOptions) => {
@@ -60,7 +61,7 @@ export function createToast<TComponents extends ToastComponentsMap>(
         position: callOptions?.position ?? defaults.position,
         dismissOnClick: callOptions?.dismissOnClick ?? defaults.dismissOnClick,
         role: callOptions?.role ?? defaults.role,
-      }
+      };
 
       const input: ToastInput = {
         variant: String(variant),
@@ -69,29 +70,33 @@ export function createToast<TComponents extends ToastComponentsMap>(
         position: optionsWithDefaults.position,
         dismissOnClick: optionsWithDefaults.dismissOnClick,
         role: optionsWithDefaults.role,
-      }
+      };
 
       if (callOptions?.id !== undefined) {
-        input.id = callOptions.id
+        input.id = callOptions.id;
       }
 
-      return manager.add(input)
-    }
+      return manager.add(input);
+    };
 
-    methods[variant] = method as ToastInstance<TComponents>[typeof variant]
+    methods[variant] = method as ToastInstance<TComponents>[typeof variant];
   }
 
   const instance = {
     ...methods,
     dismiss: (id: string) => {
-      manager.dismiss(id)
+      manager.dismiss(id);
     },
     dismissAll: () => {
-      manager.dismissAll()
+      manager.dismissAll();
     },
-  } as ToastInstance<TComponents>
+    destroy: () => {
+      manager.destroy();
+      unregisterInstance(instance);
+    },
+  } as ToastInstance<TComponents>;
 
-  registerInstance(instance, manager, components)
+  registerInstance(instance, manager, components);
 
-  return instance
+  return instance;
 }

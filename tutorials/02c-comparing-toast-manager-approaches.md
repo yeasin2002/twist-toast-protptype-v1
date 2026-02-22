@@ -30,18 +30,18 @@ We evaluate both versions across practical criteria:
 
 ## A/B Comparison Table
 
-| Area | A: Class Manager | B: Functional Manager | Better |
-| --- | --- | --- | --- |
-| Runtime speed (small queue) | Very good | Very good | Tie |
-| Runtime speed (heavier churn) | Good, can duplicate logic paths | Good, central `syncTimers()` reduces drift | B |
-| Memory behavior | Good | Good | Tie |
-| Bundle impact | Similar | Similar | Tie |
-| API clarity | Familiar OO API | Explicit functional API | Tie |
-| Internal complexity control | Can sprawl across methods | Pure helpers keep logic local | B |
-| Testability | Good | Excellent (state transitions easier to isolate) | B |
-| Refactor safety | Medium | High (pure helpers + explicit state) | B |
-| Multi-instance isolation | Good | Excellent by default via closure factory | B |
-| OSS onboarding | Good for OO users | Better for mixed contributor backgrounds | B |
+| Area                          | A: Class Manager                | B: Functional Manager                           | Better |
+| ----------------------------- | ------------------------------- | ----------------------------------------------- | ------ |
+| Runtime speed (small queue)   | Very good                       | Very good                                       | Tie    |
+| Runtime speed (heavier churn) | Good, can duplicate logic paths | Good, central `syncTimers()` reduces drift      | B      |
+| Memory behavior               | Good                            | Good                                            | Tie    |
+| Bundle impact                 | Similar                         | Similar                                         | Tie    |
+| API clarity                   | Familiar OO API                 | Explicit functional API                         | Tie    |
+| Internal complexity control   | Can sprawl across methods       | Pure helpers keep logic local                   | B      |
+| Testability                   | Good                            | Excellent (state transitions easier to isolate) | B      |
+| Refactor safety               | Medium                          | High (pure helpers + explicit state)            | B      |
+| Multi-instance isolation      | Good                            | Excellent by default via closure factory        | B      |
+| OSS onboarding                | Good for OO users               | Better for mixed contributor backgrounds        | B      |
 
 ## Performance Analysis
 

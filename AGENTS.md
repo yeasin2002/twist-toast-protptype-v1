@@ -1,4 +1,5 @@
 <!-- Product -->
+
 # 1. Product Overview
 
 twist-toast is a React toast notification library that solves design lock-in by letting developers own every pixel of the UI while the library manages behavior.
@@ -30,10 +31,8 @@ twist-toast is a React toast notification library that solves design lock-in by 
 
 React 17+ support with TypeScript generics, comprehensive testing, and npm publication. Future phases will add CLI tooling and multi-framework support.
 
-
-
-
 <!-- Structure -->
+
 # 2. Project Structure
 
 ## Monorepo Layout
@@ -59,7 +58,7 @@ twist-toast/
 
 ## Package Organization
 
-### twist-toast (Core Library- initially, will be changed based on project needs  )
+### twist-toast (Core Library- initially, will be changed based on project needs )
 
 ```
 packages/core/
@@ -124,6 +123,7 @@ Packages reference shared configs via workspace protocol:
 - **Shared configs**: Centralized in config packages for reuse
 
 <!-- tech -->
+
 # 3. Tech Stack
 
 ## Build System

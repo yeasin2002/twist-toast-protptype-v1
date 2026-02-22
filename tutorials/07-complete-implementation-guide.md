@@ -35,15 +35,15 @@ packages/twist-toast/
 Create `src/core/types.ts`:
 
 ```typescript
-import type React from 'react';
+import type React from "react";
 
 export type ToastPosition =
-  | 'top-left'
-  | 'top-center'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-center'
-  | 'bottom-right';
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
 
 export interface Toast {
   id: string;
@@ -52,7 +52,7 @@ export interface Toast {
   duration: number;
   position: ToastPosition;
   dismissOnClick: boolean;
-  role: 'alert' | 'status';
+  role: "alert" | "status";
   createdAt: number;
   pausedAt?: number;
   remainingTime?: number;
@@ -71,7 +71,7 @@ export interface ToastOptions {
   duration?: number;
   position?: ToastPosition;
   dismissOnClick?: boolean;
-  role?: 'alert' | 'status';
+  role?: "alert" | "status";
   id?: string;
 }
 ```
@@ -81,7 +81,7 @@ export interface ToastOptions {
 Create `src/core/manager.ts`:
 
 ```typescript
-import type { Toast, ToastPosition } from './types';
+import type { Toast, ToastPosition } from "./types";
 
 type ToastSubscriber = (toasts: Toast[]) => void;
 
@@ -102,7 +102,7 @@ export class ToastManager {
     this.animationDuration = options.animationDuration ?? 300;
   }
 
-  add(toast: Omit<Toast, 'id' | 'createdAt'> & { id?: string }): string {
+  add(toast: Omit<Toast, "id" | "createdAt"> & { id?: string }): string {
     const id = toast.id ?? this.generateId();
 
     if (this.toasts.has(id)) {
@@ -207,7 +207,7 @@ export class ToastManager {
 
   private getToasts(): Toast[] {
     return Array.from(this.toasts.values()).sort(
-      (a, b) => a.createdAt - b.createdAt
+      (a, b) => a.createdAt - b.createdAt,
     );
   }
 
@@ -253,20 +253,17 @@ export class ToastManager {
 Create `src/core/registry.ts`:
 
 ```typescript
-import type { ToastManager } from './manager';
-import type { ToastComponent } from './types';
+import type { ToastManager } from "./manager";
+import type { ToastComponent } from "./types";
 
 type RegistryListener = () => void;
 
-const globalRegistry = new Map<
-  ToastManager,
-  Record<string, ToastComponent>
->();
+const globalRegistry = new Map<ToastManager, Record<string, ToastComponent>>();
 const listeners = new Set<RegistryListener>();
 
 export function registerManager(
   manager: ToastManager,
-  components: Record<string, ToastComponent>
+  components: Record<string, ToastComponent>,
 ): void {
   globalRegistry.set(manager, components);
   notifyListeners();
@@ -298,23 +295,25 @@ function notifyListeners(): void {
 Create `src/factory/types.ts`:
 
 ```typescript
-import type { ToastComponent, ToastComponentProps, ToastOptions } from '../core/types';
+import type {
+  ToastComponent,
+  ToastComponentProps,
+  ToastOptions,
+} from "../core/types";
 
 // Extract payload type from component
-type ExtractPayload<TComponent> = TComponent extends React.ComponentType<
-  infer P
->
-  ? Omit<P, 'dismiss' | 'toastId'>
-  : never;
+type ExtractPayload<TComponent> =
+  TComponent extends React.ComponentType<infer P>
+    ? Omit<P, "dismiss" | "toastId">
+    : never;
 
 // Generate methods from component map
-export type ToastMethods<TComponents extends Record<string, ToastComponent>> =
-  {
-    [K in keyof TComponents]: (
-      payload: ExtractPayload<TComponents[K]>,
-      options?: ToastOptions
-    ) => string;
-  };
+export type ToastMethods<TComponents extends Record<string, ToastComponent>> = {
+  [K in keyof TComponents]: (
+    payload: ExtractPayload<TComponents[K]>,
+    options?: ToastOptions,
+  ) => string;
+};
 
 // Toast instance type
 export type ToastInstance<TComponents extends Record<string, ToastComponent>> =
@@ -337,16 +336,14 @@ export interface CreateToastOptions {
 Create `src/factory/createToast.ts`:
 
 ```typescript
-import { ToastManager } from '../core/manager';
-import { registerManager } from '../core/registry';
-import type { ToastComponent, ToastOptions } from '../core/types';
-import type { CreateToastOptions, ToastInstance, ToastMethods } from './types';
+import { ToastManager } from "../core/manager";
+import { registerManager } from "../core/registry";
+import type { ToastComponent, ToastOptions } from "../core/types";
+import type { CreateToastOptions, ToastInstance, ToastMethods } from "./types";
 
-export function createToast<
-  TComponents extends Record<string, ToastComponent>
->(
+export function createToast<TComponents extends Record<string, ToastComponent>>(
   components: TComponents,
-  options: CreateToastOptions = {}
+  options: CreateToastOptions = {},
 ): ToastInstance<TComponents> {
   const manager = new ToastManager({
     maxToasts: options.maxToasts ?? 5,
@@ -355,9 +352,9 @@ export function createToast<
 
   const defaults = {
     duration: options.defaultDuration ?? 4000,
-    position: options.defaultPosition ?? ('top-right' as const),
+    position: options.defaultPosition ?? ("top-right" as const),
     dismissOnClick: options.dismissOnClick ?? true,
-    role: 'status' as const,
+    role: "status" as const,
   };
 
   const methods = {} as ToastMethods<TComponents>;
@@ -393,8 +390,8 @@ export function createToast<
 Create `src/react/utils.ts`:
 
 ```typescript
-import type { ToastManager } from '../core/manager';
-import type { ToastPosition } from '../core/types';
+import type { ToastManager } from "../core/manager";
+import type { ToastPosition } from "../core/types";
 
 const managerKeys = new WeakMap<ToastManager, string>();
 let keyCounter = 0;
@@ -414,29 +411,29 @@ export function getPositionContainer(position: ToastPosition): HTMLElement {
   let container = positionContainers.get(position);
 
   if (!container) {
-    container = document.createElement('div');
-    container.setAttribute('data-toast-container', position);
-    container.style.position = 'fixed';
-    container.style.zIndex = '9999';
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.gap = '0.5rem';
-    container.style.pointerEvents = 'none';
+    container = document.createElement("div");
+    container.setAttribute("data-toast-container", position);
+    container.style.position = "fixed";
+    container.style.zIndex = "9999";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "0.5rem";
+    container.style.pointerEvents = "none";
 
-    const [vertical, horizontal] = position.split('-');
-    if (vertical === 'top') {
-      container.style.top = '1rem';
+    const [vertical, horizontal] = position.split("-");
+    if (vertical === "top") {
+      container.style.top = "1rem";
     } else {
-      container.style.bottom = '1rem';
+      container.style.bottom = "1rem";
     }
 
-    if (horizontal === 'left') {
-      container.style.left = '1rem';
-    } else if (horizontal === 'right') {
-      container.style.right = '1rem';
+    if (horizontal === "left") {
+      container.style.left = "1rem";
+    } else if (horizontal === "right") {
+      container.style.right = "1rem";
     } else {
-      container.style.left = '50%';
-      container.style.transform = 'translateX(-50%)';
+      container.style.left = "50%";
+      container.style.transform = "translateX(-50%)";
     }
 
     document.body.appendChild(container);
@@ -636,25 +633,25 @@ Create `src/index.ts`:
 
 ```typescript
 // Core exports
-export { ToastManager } from './core/manager';
+export { ToastManager } from "./core/manager";
 export type {
   Toast,
   ToastPosition,
   ToastComponent,
   ToastComponentProps,
   ToastOptions,
-} from './core/types';
+} from "./core/types";
 
 // Factory exports
-export { createToast } from './factory/createToast';
+export { createToast } from "./factory/createToast";
 export type {
   CreateToastOptions,
   ToastInstance,
   ToastMethods,
-} from './factory/types';
+} from "./factory/types";
 
 // React exports
-export { ToastProvider } from './react/ToastProvider';
+export { ToastProvider } from "./react/ToastProvider";
 ```
 
 ## Step 8: Optional Styles
@@ -670,13 +667,17 @@ Create `src/styles.css`:
 [data-state="active"] {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 300ms ease-out, transform 300ms ease-out;
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
 }
 
 [data-state="exiting"] {
   opacity: 0;
   transform: translateY(-1rem);
-  transition: opacity 300ms ease-in, transform 300ms ease-in;
+  transition:
+    opacity 300ms ease-in,
+    transform 300ms ease-in;
 }
 
 [data-toast-container="bottom-left"] [data-state="entering"],
@@ -706,14 +707,14 @@ Create `src/styles.css`:
 Update `tsdown.config.ts`:
 
 ```typescript
-import { defineConfig } from 'tsdown';
+import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['esm', 'cjs'],
+  entry: ["src/index.ts"],
+  format: ["esm", "cjs"],
   dts: true,
   clean: true,
-  external: ['react', 'react-dom'],
+  external: ["react", "react-dom"],
   minify: false,
   sourcemap: true,
 });
@@ -740,9 +741,7 @@ Update `package.json`:
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -762,13 +761,7 @@ Update `package.json`:
     "typescript": "^5.9.3",
     "vitest": "^1.0.0"
   },
-  "keywords": [
-    "react",
-    "toast",
-    "notification",
-    "typescript",
-    "headless"
-  ]
+  "keywords": ["react", "toast", "notification", "typescript", "headless"]
 }
 ```
 
@@ -782,6 +775,7 @@ pnpm build
 ```
 
 You should see output in `dist/`:
+
 - `index.mjs` (ESM)
 - `index.cjs` (CommonJS)
 - `index.d.ts` (TypeScript types)
@@ -807,6 +801,7 @@ Or use the example app in your monorepo (we'll cover this in the next tutorial).
 You now have a complete, working library! In the next tutorial, we'll create an example app to demonstrate usage and test the library locally.
 
 **Key takeaways:**
+
 - Organize code by concern (core, factory, react)
 - Export only what users need
 - Provide both ESM and CJS builds

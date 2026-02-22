@@ -1,5 +1,5 @@
-export { createToast } from './create-toast'
-export { ToastProvider } from './ToastProvider'
+export { createToast } from "./create-toast";
+export { ToastProvider } from "./ToastProvider";
 
 export type {
   CreateToastOptions,
@@ -8,4 +8,4 @@ export type {
   ToastComponentProps,
   ToastComponentsMap,
   ToastInstance,
-} from './types'
+} from "./types";

@@ -13,6 +13,7 @@ Unlike most toast libraries that provide pre-built UI components, twist-toast in
 ## Tutorial Index
 
 ### [00. Getting Started](./00-getting-started.md)
+
 **Start here!** Learn what you'll build, set up your environment, and understand how to use these tutorials effectively.
 
 - Prerequisites and setup
@@ -26,6 +27,7 @@ Unlike most toast libraries that provide pre-built UI components, twist-toast in
 ---
 
 ### [01. Understanding the Architecture](./01-understanding-the-architecture.md)
+
 Learn the high-level design decisions and architectural patterns that make twist-toast work.
 
 - The core problem we're solving
@@ -39,6 +41,7 @@ Learn the high-level design decisions and architectural patterns that make twist
 ---
 
 ### [02. Building the Toast Manager](./02-building-the-toast-manager.md)
+
 Implement the framework-agnostic core that manages toast lifecycle, timers, and queuing.
 
 - State machine concepts
@@ -53,6 +56,7 @@ Implement the framework-agnostic core that manages toast lifecycle, timers, and 
 ---
 
 ### [02b. Building the Toast Manager (Functional)](./02b-building-the-toast-manager.md)
+
 Build the same toast manager behavior using a functional factory and closure-based state.
 
 - Closure-based manager architecture
@@ -66,6 +70,7 @@ Build the same toast manager behavior using a functional factory and closure-bas
 ---
 
 ### [02c. Comparing Toast Manager Approaches (A/B)](./02c-comparing-toast-manager-approaches.md)
+
 Compare class-based and functional manager implementations for real project decisions.
 
 - Performance tradeoffs in real workloads
@@ -79,6 +84,7 @@ Compare class-based and functional manager implementations for real project deci
 ---
 
 ### [03. Factory Pattern and TypeScript Generics](./03-factory-pattern-and-typescript-generics.md)
+
 Create the `createToast()` factory with full type inference using advanced TypeScript patterns.
 
 - TypeScript generics fundamentals
@@ -93,6 +99,7 @@ Create the `createToast()` factory with full type inference using advanced TypeS
 ---
 
 ### [04. React Provider and Portals](./04-react-provider-and-portals.md)
+
 Build the React integration layer using Context API and portals for rendering outside the DOM hierarchy.
 
 - React portals explained
@@ -107,6 +114,7 @@ Build the React integration layer using Context API and portals for rendering ou
 ---
 
 ### [05. Animations and Transitions](./05-animations-and-transitions.md)
+
 Add smooth enter/exit animations while respecting user preferences and maintaining flexibility.
 
 - Animation lifecycle management
@@ -120,6 +128,7 @@ Add smooth enter/exit animations while respecting user preferences and maintaini
 ---
 
 ### [06. Testing Strategies](./06-testing-strategies.md)
+
 Write comprehensive tests for each layer using Vitest, React Testing Library, and type testing tools.
 
 - Testing stack setup (Vitest, RTL, tsd)
@@ -135,6 +144,7 @@ Write comprehensive tests for each layer using Vitest, React Testing Library, an
 ---
 
 ### [07. Complete Implementation Guide](./07-complete-implementation-guide.md)
+
 The complete reference implementation with full file structure and all code in one place.
 
 - Complete project structure
@@ -149,6 +159,7 @@ The complete reference implementation with full file structure and all code in o
 ---
 
 ### [08. Creating an Example App](./08-creating-example-app.md)
+
 Build a Next.js example app to test your library locally and create comprehensive demos.
 
 - Setting up Next.js in the monorepo
@@ -165,6 +176,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 ## Learning Paths
 
 ### Path 1: Complete Beginner
+
 **Goal**: Learn React library development from scratch
 
 1. Read 00-getting-started.md thoroughly
@@ -176,6 +188,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 **Time**: 12-15 hours over 1-2 weeks
 
 ### Path 2: Experienced Developer
+
 **Goal**: Learn specific patterns and techniques
 
 1. Skim 00-getting-started.md and 01-understanding-the-architecture.md
@@ -187,6 +200,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 **Time**: 4-6 hours over a weekend
 
 ### Path 3: Quick Reference
+
 **Goal**: Look up specific implementations
 
 1. Jump directly to 07-complete-implementation-guide.md
@@ -200,6 +214,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 ## Key Concepts Covered
 
 ### React Patterns
+
 - Context API for state sharing
 - Portals for rendering outside hierarchy
 - Custom hooks for subscriptions
@@ -207,6 +222,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 - Event-driven architecture
 
 ### TypeScript Advanced Features
+
 - Generic type parameters
 - Mapped types
 - Conditional types
@@ -215,6 +231,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 - Type testing with tsd
 
 ### State Management
+
 - Subscription pattern
 - Event emitters
 - Queue management
@@ -222,6 +239,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 - Pause/resume logic
 
 ### Testing
+
 - Unit testing pure functions
 - Integration testing React components
 - Type testing
@@ -229,6 +247,7 @@ Build a Next.js example app to test your library locally and create comprehensiv
 - Coverage strategies
 
 ### Build & Tooling
+
 - Monorepo with pnpm workspaces
 - Turborepo for build orchestration
 - tsdown for library bundling
@@ -290,18 +309,21 @@ Once you've completed the tutorials:
 ## Additional Resources
 
 ### Official Documentation
+
 - [React Documentation](https://react.dev/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Vitest Documentation](https://vitest.dev/)
 - [pnpm Workspaces](https://pnpm.io/workspaces)
 
 ### Related Topics
+
 - [React Portals Deep Dive](https://react.dev/reference/react-dom/createPortal)
 - [TypeScript Mapped Types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)
 - [Testing Library Best Practices](https://testing-library.com/docs/guiding-principles)
 - [Semantic Versioning](https://semver.org/)
 
 ### Inspiration
+
 - [Radix UI](https://www.radix-ui.com/) - Headless UI components
 - [Headless UI](https://headlessui.com/) - Unstyled, accessible components
 - [React Hook Form](https://react-hook-form.com/) - Performant form library

@@ -34,6 +34,7 @@ You don't need to be an expert in any of these, but familiarity will help you fo
 The tutorials are designed to be followed in order, building on concepts from previous lessons:
 
 ### 01. Understanding the Architecture
+
 Learn the high-level design decisions and why we made them. Understand the four-layer architecture and how data flows through the system.
 
 **Time**: 30 minutes  
@@ -41,6 +42,7 @@ Learn the high-level design decisions and why we made them. Understand the four-
 **Topics**: Architecture patterns, separation of concerns, design philosophy
 
 ### 02. Building the Toast Manager
+
 Implement the core state machine that manages toast lifecycle, timers, and queuing. This is pure TypeScript with no React dependencies.
 
 **Time**: 1 hour  
@@ -48,6 +50,7 @@ Implement the core state machine that manages toast lifecycle, timers, and queui
 **Topics**: State machines, subscription patterns, timer management, queue algorithms
 
 ### 03. Factory Pattern and TypeScript Generics
+
 Create the `createToast()` factory that generates typed toast instances. Learn advanced TypeScript patterns like mapped types, conditional types, and type inference.
 
 **Time**: 1.5 hours  
@@ -55,6 +58,7 @@ Create the `createToast()` factory that generates typed toast instances. Learn a
 **Topics**: TypeScript generics, mapped types, conditional types, type inference, factory pattern
 
 ### 04. React Provider and Portals
+
 Build the React integration layer using Context API and portals. Learn how to render components outside the normal DOM hierarchy while maintaining React's component relationships.
 
 **Time**: 1 hour  
@@ -62,6 +66,7 @@ Build the React integration layer using Context API and portals. Learn how to re
 **Topics**: React Context, portals, event-driven architecture, DOM manipulation
 
 ### 05. Animations and Transitions
+
 Add smooth enter/exit animations using CSS transitions. Learn how to coordinate animations with React's lifecycle and respect user preferences.
 
 **Time**: 45 minutes  
@@ -69,6 +74,7 @@ Add smooth enter/exit animations using CSS transitions. Learn how to coordinate 
 **Topics**: CSS transitions, animation lifecycle, accessibility (prefers-reduced-motion)
 
 ### 06. Testing Strategies
+
 Write comprehensive tests for each layer using Vitest and React Testing Library. Learn how to test pure TypeScript, React components, and TypeScript types.
 
 **Time**: 1.5 hours  
@@ -76,6 +82,7 @@ Write comprehensive tests for each layer using Vitest and React Testing Library.
 **Topics**: Unit testing, integration testing, type testing, mocking, fake timers
 
 ### 07. Complete Implementation Guide
+
 Bring everything together with the complete file structure and implementation. This is your reference for the final codebase.
 
 **Time**: 2 hours  
@@ -83,6 +90,7 @@ Bring everything together with the complete file structure and implementation. T
 **Topics**: Project organization, build configuration, module exports, package.json setup
 
 ### 08. Creating an Example App
+
 Build a Next.js example app to test your library locally. Learn how to link local packages and create comprehensive demos.
 
 **Time**: 1 hour  
@@ -109,11 +117,12 @@ Each tutorial follows this structure:
 
 ### Code Examples
 
-All code examples are complete and runnable. You can copy-paste them directly into your project. We explain not just *what* the code does, but *why* we wrote it that way.
+All code examples are complete and runnable. You can copy-paste them directly into your project. We explain not just _what_ the code does, but _why_ we wrote it that way.
 
 ### Explanations
 
 We prioritize understanding over memorization. Each decision is explained:
+
 - Why this pattern over alternatives?
 - What are the tradeoffs?
 - When would you choose differently?
@@ -169,6 +178,7 @@ mkdir -p apps/example
 ### 4. Install Development Tools
 
 Install your preferred code editor. We recommend:
+
 - **VS Code** with extensions:
   - ESLint
   - Prettier
@@ -232,22 +242,26 @@ Ready to start? Head to **Tutorial 01: Understanding the Architecture** to learn
 ## Additional Resources
 
 ### React Documentation
+
 - [React Hooks](https://react.dev/reference/react)
 - [React Context](https://react.dev/learn/passing-data-deeply-with-context)
 - [React Portals](https://react.dev/reference/react-dom/createPortal)
 
 ### TypeScript Documentation
+
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 - [Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html)
 - [Mapped Types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)
 - [Conditional Types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html)
 
 ### Testing
+
 - [Vitest Documentation](https://vitest.dev/)
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Testing Library User Event](https://testing-library.com/docs/user-event/intro)
 
 ### Build Tools
+
 - [tsdown Documentation](https://tsdown.vercel.app/)
 - [Turborepo Documentation](https://turbo.build/repo/docs)
 - [pnpm Workspaces](https://pnpm.io/workspaces)

@@ -20,25 +20,25 @@ This package provides the React-facing API on top of `@twist-toast/core`.
 ## Usage
 
 ```tsx
-import { ToastProvider, createToast } from '@twist-toast/react'
-import type { ToastComponentProps } from '@twist-toast/react'
+import { ToastProvider, createToast } from "@twist-toast/react";
+import type { ToastComponentProps } from "@twist-toast/react";
 
 const toast = createToast({
   success: ({ title }: ToastComponentProps<{ title: string }>) => (
     <div>{title}</div>
   ),
-})
+});
 ```
 
 ```tsx
 function App() {
   return (
     <ToastProvider>
-      <button onClick={() => toast.success({ title: 'Saved!' })}>
+      <button onClick={() => toast.success({ title: "Saved!" })}>
         Trigger
       </button>
     </ToastProvider>
-  )
+  );
 }
 ```
 

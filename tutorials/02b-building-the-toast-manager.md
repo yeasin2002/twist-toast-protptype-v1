@@ -406,8 +406,14 @@ const manager = createToastManager({
 });
 
 const unsubscribe = manager.subscribe((state) => {
-  console.log("active", state.active.map((t) => t.id));
-  console.log("queued", state.queued.map((t) => t.id));
+  console.log(
+    "active",
+    state.active.map((t) => t.id),
+  );
+  console.log(
+    "queued",
+    state.queued.map((t) => t.id),
+  );
 });
 
 const id = manager.add({

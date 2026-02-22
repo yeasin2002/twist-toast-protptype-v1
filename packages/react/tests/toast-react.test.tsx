@@ -1,33 +1,33 @@
-import { act } from 'react'
-import { createRoot } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ToastProvider, createToast } from '../src'
-import { __resetRegistryForTests } from '../src/registry'
-import type { ToastComponentProps } from '../src/types'
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider, createToast } from "../src";
+import { __resetRegistryForTests } from "../src/registry";
+import type { ToastComponentProps } from "../src/types";
 
 function SuccessToast({ title }: ToastComponentProps<{ title: string }>) {
-  return <div>{title}</div>
+  return <div>{title}</div>;
 }
 
-describe('react wrapper smoke test', () => {
-  let mountNode: HTMLDivElement
+describe("react wrapper smoke test", () => {
+  let mountNode: HTMLDivElement;
 
   beforeEach(() => {
-    vi.useFakeTimers()
-    __resetRegistryForTests()
-    document.body.innerHTML = ''
-    mountNode = document.createElement('div')
-    document.body.appendChild(mountNode)
-  })
+    vi.useFakeTimers();
+    __resetRegistryForTests();
+    document.body.innerHTML = "";
+    mountNode = document.createElement("div");
+    document.body.appendChild(mountNode);
+  });
 
   afterEach(() => {
-    vi.useRealTimers()
-    mountNode.remove()
-    document.body.innerHTML = ''
-  })
+    vi.useRealTimers();
+    mountNode.remove();
+    document.body.innerHTML = "";
+  });
 
-  it('renders and dismisses a toast', () => {
-    const root = createRoot(mountNode)
+  it("renders and dismisses a toast", () => {
+    const root = createRoot(mountNode);
     const toast = createToast(
       {
         success: SuccessToast,
@@ -35,40 +35,40 @@ describe('react wrapper smoke test', () => {
       {
         defaultDuration: 0,
       },
-    )
+    );
 
     act(() => {
       root.render(
         <ToastProvider>
           <div>App</div>
         </ToastProvider>,
-      )
-    })
+      );
+    });
 
     act(() => {
-      toast.success({ title: 'Saved' })
-    })
+      toast.success({ title: "Saved" });
+    });
 
-    const toastElement = document.querySelector('[data-twist-toast]') as
-      | HTMLElement
-      | null
-    expect(toastElement).not.toBeNull()
-    expect(document.body.textContent).toContain('Saved')
+    const toastElement = document.querySelector(
+      "[data-twist-toast]",
+    ) as HTMLElement | null;
+    expect(toastElement).not.toBeNull();
+    expect(document.body.textContent).toContain("Saved");
 
     if (toastElement) {
       act(() => {
-        toastElement.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-      })
+        toastElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
     }
 
     act(() => {
-      vi.advanceTimersByTime(250)
-    })
+      vi.advanceTimersByTime(250);
+    });
 
-    expect(document.querySelector('[data-twist-toast]')).toBeNull()
+    expect(document.querySelector("[data-twist-toast]")).toBeNull();
 
     act(() => {
-      root.unmount()
-    })
-  })
-})
+      root.unmount();
+    });
+  });
+});

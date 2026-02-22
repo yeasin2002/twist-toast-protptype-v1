@@ -1,25 +1,35 @@
-import type { ToastManager } from '@twist-toast/core'
-import type { ToastComponentsMap } from './types'
+import type { ToastManager } from "@twist-toast/core";
+import type { ToastComponentsMap } from "./types";
 
 export interface ToastRegistryEntry {
-  id: string
-  manager: ToastManager
-  components: ToastComponentsMap
+  id: string;
+  manager: ToastManager;
+  components: ToastComponentsMap;
 }
 
-type RegistryListener = () => void
+type RegistryListener = () => void;
 
-const instanceIds = new WeakMap<object, string>()
-const entries = new Map<string, ToastRegistryEntry>()
-const listeners = new Set<RegistryListener>()
+const instanceIds = new WeakMap<object, string>();
+const entries = new Map<string, ToastRegistryEntry>();
+const listeners = new Set<RegistryListener>();
 
-let sequence = 0
-let snapshot: ToastRegistryEntry[] = []
+let sequence = 0;
+let snapshot: ToastRegistryEntry[] = [];
 
 function emitChange(): void {
-  snapshot = Array.from(entries.values())
+  const newSnapshot = Array.from(entries.values());
+
+  // Only update if actually changed (optimization)
+  if (
+    snapshot.length === newSnapshot.length &&
+    snapshot.every((entry, i) => entry === newSnapshot[i])
+  ) {
+    return;
+  }
+
+  snapshot = newSnapshot;
   for (const listener of listeners) {
-    listener()
+    listener();
   }
 }
 
@@ -28,42 +38,56 @@ export function registerInstance(
   manager: ToastManager,
   components: ToastComponentsMap,
 ): void {
-  const existingId = instanceIds.get(instance)
+  const existingId = instanceIds.get(instance);
 
   if (existingId) {
     entries.set(existingId, {
       id: existingId,
       manager,
       components,
-    })
-    emitChange()
-    return
+    });
+    emitChange();
+    return;
   }
 
-  const id = `toast-instance-${++sequence}`
-  instanceIds.set(instance, id)
+  const id = `toast-instance-${++sequence}`;
+  instanceIds.set(instance, id);
   entries.set(id, {
     id,
     manager,
     components,
-  })
-  emitChange()
+  });
+  emitChange();
+}
+
+/**
+ * Unregister a toast instance and clean up resources
+ */
+export function unregisterInstance(instance: object): void {
+  const id = instanceIds.get(instance);
+  if (!id) {
+    return;
+  }
+
+  entries.delete(id);
+  instanceIds.delete(instance);
+  emitChange();
 }
 
 export function getInstancesSnapshot(): ToastRegistryEntry[] {
-  return snapshot
+  return snapshot;
 }
 
 export function subscribeToRegistry(listener: RegistryListener): () => void {
-  listeners.add(listener)
+  listeners.add(listener);
   return () => {
-    listeners.delete(listener)
-  }
+    listeners.delete(listener);
+  };
 }
 
 export function __resetRegistryForTests(): void {
-  entries.clear()
-  listeners.clear()
-  sequence = 0
-  snapshot = []
+  entries.clear();
+  listeners.clear();
+  sequence = 0;
+  snapshot = [];
 }
