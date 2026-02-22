@@ -38,7 +38,7 @@ export interface ToastRecord extends Omit<ToastInput, "id" | "duration"> {
   duration: number;
   createdAt: number;
   paused: boolean;
-  pausedAt?: number;
+  pausedAt?: number | undefined;
   totalPausedMs: number;
 }
 

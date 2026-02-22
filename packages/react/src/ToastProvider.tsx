@@ -4,7 +4,7 @@ import type {
   ToastRecord,
   ToastRole,
 } from "@twist-toast/core";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import {
   useEffect,
   useMemo,
@@ -21,6 +21,8 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
+const TRANSITION_DURATION_MS = 180;
+
 const rootStyle: CSSProperties = {
   position: "fixed",
   inset: 0,
@@ -28,14 +30,25 @@ const rootStyle: CSSProperties = {
   zIndex: 9999,
 };
 
-const positionStyles: Record<ToastPosition, CSSProperties> = {
+const baseContainerStyle: CSSProperties = {
+  position: "absolute",
+  display: "flex",
+  gap: "0.5rem",
+  maxWidth: "min(420px, calc(100vw - 1rem))",
+  padding: "0.5rem",
+  pointerEvents: "none",
+};
+
+const containerStyles: Record<ToastPosition, CSSProperties> = {
   "top-left": {
+    ...baseContainerStyle,
     top: 0,
     left: 0,
     alignItems: "flex-start",
     flexDirection: "column",
   },
   "top-center": {
+    ...baseContainerStyle,
     top: 0,
     left: "50%",
     transform: "translateX(-50%)",
@@ -43,18 +56,21 @@ const positionStyles: Record<ToastPosition, CSSProperties> = {
     flexDirection: "column",
   },
   "top-right": {
+    ...baseContainerStyle,
     top: 0,
     right: 0,
     alignItems: "flex-end",
     flexDirection: "column",
   },
   "bottom-left": {
+    ...baseContainerStyle,
     bottom: 0,
     left: 0,
     alignItems: "flex-start",
     flexDirection: "column-reverse",
   },
   "bottom-center": {
+    ...baseContainerStyle,
     bottom: 0,
     left: "50%",
     transform: "translateX(-50%)",
@@ -62,24 +78,13 @@ const positionStyles: Record<ToastPosition, CSSProperties> = {
     flexDirection: "column-reverse",
   },
   "bottom-right": {
+    ...baseContainerStyle,
     bottom: 0,
     right: 0,
     alignItems: "flex-end",
     flexDirection: "column-reverse",
   },
 };
-
-/**
- * Check if user prefers reduced motion
- */
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) {
-    return false;
-  }
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-const TRANSITION_DURATION_MS = prefersReducedMotion() ? 0 : 180;
 
 type ToastRenderPhase = "enter" | "visible" | "exit";
 
@@ -88,27 +93,39 @@ interface RenderedToast {
   phase: ToastRenderPhase;
 }
 
-function getAriaLive(role: ToastRole): "polite" | "assertive" {
-  return role === "alert" ? "assertive" : "polite";
-}
+function usePrefersReducedMotion(): boolean {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-function getPositionBuckets(
-  toasts: RenderedToast[],
-): Map<ToastPosition, RenderedToast[]> {
-  const buckets = new Map<ToastPosition, RenderedToast[]>();
-
-  for (const item of toasts) {
-    const position = item.toast.position;
-    const current = buckets.get(position);
-    if (current) {
-      current.push(item);
-      continue;
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return undefined;
     }
 
-    buckets.set(position, [item]);
-  }
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      setPrefersReducedMotion(mediaQuery.matches);
+    };
 
-  return buckets;
+    update();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", update);
+      return () => {
+        mediaQuery.removeEventListener("change", update);
+      };
+    }
+
+    mediaQuery.addListener(update);
+    return () => {
+      mediaQuery.removeListener(update);
+    };
+  }, []);
+
+  return prefersReducedMotion;
+}
+
+function getAriaLive(role: ToastRole): "polite" | "assertive" {
+  return role === "alert" ? "assertive" : "polite";
 }
 
 function getHiddenTransform(position: ToastPosition): string {
@@ -131,27 +148,116 @@ function getHiddenTransform(position: ToastPosition): string {
 function getToastStyle(
   position: ToastPosition,
   phase: ToastRenderPhase,
-  reducedMotion: boolean,
+  transitionDuration: number,
 ): CSSProperties {
   const isVisible = phase === "visible";
+  const baseStyle: CSSProperties = {
+    pointerEvents: phase === "exit" ? "none" : "auto",
+    opacity: isVisible ? 1 : 0,
+  };
 
-  if (reducedMotion) {
-    // Skip transitions for reduced motion
-    return {
-      pointerEvents: phase === "exit" ? "none" : "auto",
-      opacity: isVisible ? 1 : 0,
-    };
+  if (transitionDuration <= 0) {
+    return baseStyle;
   }
 
   return {
-    pointerEvents: phase === "exit" ? "none" : "auto",
-    opacity: isVisible ? 1 : 0,
+    ...baseStyle,
     transform: isVisible
       ? "translate3d(0, 0, 0)"
       : getHiddenTransform(position),
-    transition: `opacity ${TRANSITION_DURATION_MS}ms ease, transform ${TRANSITION_DURATION_MS}ms ease`,
+    transition: `opacity ${transitionDuration}ms ease, transform ${transitionDuration}ms ease`,
     willChange: "opacity, transform",
   };
+}
+
+function getVisualState(
+  phase: ToastRenderPhase,
+  paused: boolean,
+): "active" | "paused" | "entering" | "exiting" {
+  if (phase === "exit") {
+    return "exiting";
+  }
+  if (phase === "enter") {
+    return "entering";
+  }
+  if (paused) {
+    return "paused";
+  }
+  return "active";
+}
+
+function reconcileRenderedToasts(
+  previous: RenderedToast[],
+  activeToasts: readonly ToastRecord[],
+): RenderedToast[] {
+  const activeById = new Map(activeToasts.map((toast) => [toast.id, toast]));
+  const seen = new Set<string>();
+  const next: RenderedToast[] = [];
+
+  for (const item of previous) {
+    const activeToast = activeById.get(item.toast.id);
+    if (activeToast) {
+      next.push({
+        toast: activeToast,
+        phase: item.phase === "exit" ? "visible" : item.phase,
+      });
+    } else {
+      next.push(
+        item.phase === "exit"
+          ? item
+          : {
+              toast: item.toast,
+              phase: "exit",
+            },
+      );
+    }
+    seen.add(item.toast.id);
+  }
+
+  for (const toast of activeToasts) {
+    if (!seen.has(toast.id)) {
+      next.push({
+        toast,
+        phase: "enter",
+      });
+    }
+  }
+
+  return next;
+}
+
+function markEnteringToastsVisible(toasts: RenderedToast[]): RenderedToast[] {
+  let changed = false;
+  const next = toasts.map<RenderedToast>((item) => {
+    if (item.phase !== "enter") {
+      return item;
+    }
+    changed = true;
+    return {
+      ...item,
+      phase: "visible",
+    };
+  });
+
+  return changed ? next : toasts;
+}
+
+function groupToastsByPosition(
+  toasts: RenderedToast[],
+): Map<ToastPosition, RenderedToast[]> {
+  const groups = new Map<ToastPosition, RenderedToast[]>();
+
+  for (const item of toasts) {
+    const position = item.toast.position;
+    const current = groups.get(position);
+    if (current) {
+      current.push(item);
+      continue;
+    }
+    groups.set(position, [item]);
+  }
+
+  return groups;
 }
 
 interface ManagerToastsProps {
@@ -164,53 +270,17 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
   const exitTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
-  const reducedMotion = prefersReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const transitionDuration = prefersReducedMotion ? 0 : TRANSITION_DURATION_MS;
 
-  // Subscribe to manager and reconcile in one effect
   useEffect(() => {
     return manager.subscribe((state) => {
-      const activeById = new Map(
-        state.active.map((toast) => [toast.id, toast]),
+      setRenderedToasts((previous) =>
+        reconcileRenderedToasts(previous, state.active),
       );
-
-      setRenderedToasts((previous) => {
-        const next: RenderedToast[] = [];
-        const seen = new Set<string>();
-
-        // Update existing toasts
-        for (const item of previous) {
-          const activeToast = activeById.get(item.toast.id);
-          if (activeToast) {
-            next.push({
-              toast: activeToast,
-              phase: item.phase === "exit" ? "visible" : item.phase,
-            });
-          } else {
-            next.push({
-              toast: item.toast,
-              phase: "exit",
-            });
-          }
-          seen.add(item.toast.id);
-        }
-
-        // Add new toasts
-        for (const toast of state.active) {
-          if (seen.has(toast.id)) {
-            continue;
-          }
-          next.push({
-            toast,
-            phase: "enter",
-          });
-        }
-
-        return next;
-      });
     });
   }, [manager]);
 
-  // Transition enter -> visible
   useEffect(() => {
     const hasEnteringToasts = renderedToasts.some(
       (item) => item.phase === "enter",
@@ -219,25 +289,20 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
       return undefined;
     }
 
+    if (transitionDuration === 0) {
+      setRenderedToasts((previous) => markEnteringToastsVisible(previous));
+      return undefined;
+    }
+
     const frame = requestAnimationFrame(() => {
-      setRenderedToasts((previous) =>
-        previous.map((item) =>
-          item.phase === "enter"
-            ? {
-                ...item,
-                phase: "visible",
-              }
-            : item,
-        ),
-      );
+      setRenderedToasts((previous) => markEnteringToastsVisible(previous));
     });
 
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [renderedToasts]);
+  }, [renderedToasts, transitionDuration]);
 
-  // Handle exit timers
   useEffect(() => {
     const exitingIds = new Set(
       renderedToasts
@@ -255,7 +320,7 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
         setRenderedToasts((previous) =>
           previous.filter((item) => item.toast.id !== id),
         );
-      }, TRANSITION_DURATION_MS);
+      }, transitionDuration);
 
       exitTimers.current.set(id, handle);
     }
@@ -264,13 +329,11 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
       if (exitingIds.has(id)) {
         continue;
       }
-
       clearTimeout(handle);
       exitTimers.current.delete(id);
     }
-  }, [renderedToasts]);
+  }, [renderedToasts, transitionDuration]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       for (const handle of exitTimers.current.values()) {
@@ -281,94 +344,69 @@ function ManagerToasts({ manager, components }: ManagerToastsProps) {
   }, []);
 
   const groupedToasts = useMemo(
-    () => getPositionBuckets(renderedToasts),
+    () => groupToastsByPosition(renderedToasts),
     [renderedToasts],
   );
 
   return (
     <>
-      {Array.from(groupedToasts.entries()).map(([position, toasts]) => {
-        const containerStyle: CSSProperties = {
-          position: "absolute",
-          display: "flex",
-          gap: "0.5rem",
-          maxWidth: "min(420px, calc(100vw - 1rem))",
-          padding: "0.5rem",
-          pointerEvents: "none",
-          ...positionStyles[position],
-        };
+      {Array.from(groupedToasts.entries()).map(([position, toasts]) => (
+        <div
+          key={position}
+          data-position={position}
+          style={containerStyles[position]}
+        >
+          {toasts.map((item) => {
+            const toast = item.toast;
+            const ToastView = components[toast.variant] as
+              | ToastComponent
+              | undefined;
 
-        return (
-          <div key={position} data-position={position} style={containerStyle}>
-            {toasts.map((item) => {
-              const toast = item.toast;
-              const ToastView = components[toast.variant] as
-                | ToastComponent
-                | undefined;
+            if (!ToastView) {
+              return null;
+            }
 
-              if (!ToastView) {
-                return null;
+            const dismiss = () => {
+              manager.dismiss(toast.id);
+            };
+
+            const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.key === "Escape") {
+                dismiss();
               }
+            };
 
-              const dismiss = () => {
-                manager.dismiss(toast.id);
-              };
-
-              const handleMouseEnter = () => {
-                manager.pause(toast.id);
-              };
-
-              const handleMouseLeave = () => {
-                manager.resume(toast.id);
-              };
-
-              const handleKeyDown = (e: React.KeyboardEvent) => {
-                if (e.key === "Escape") {
-                  dismiss();
-                }
-              };
-
-              const visualState =
-                item.phase === "exit"
-                  ? "exiting"
-                  : item.phase === "enter"
-                    ? "entering"
-                    : toast.paused
-                      ? "paused"
-                      : "active";
-
-              return (
-                <ToastErrorBoundary key={toast.id} onError={dismiss}>
-                  <div
-                    data-twist-toast=""
-                    data-position={toast.position}
-                    data-variant={toast.variant}
-                    data-state={visualState}
-                    role={toast.role}
-                    aria-live={getAriaLive(toast.role)}
-                    tabIndex={0}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={toast.dismissOnClick ? dismiss : undefined}
-                    onKeyDown={handleKeyDown}
-                    style={getToastStyle(
-                      toast.position,
-                      item.phase,
-                      reducedMotion,
-                    )}
-                  >
-                    <ToastView
-                      {...toast.payload}
-                      dismiss={dismiss}
-                      toastId={toast.id}
-                    />
-                  </div>
-                </ToastErrorBoundary>
-              );
-            })}
-          </div>
-        );
-      })}
+            return (
+              <ToastErrorBoundary key={toast.id} onError={dismiss}>
+                <div
+                  data-twist-toast=""
+                  data-position={toast.position}
+                  data-variant={toast.variant}
+                  data-state={getVisualState(item.phase, toast.paused)}
+                  role={toast.role}
+                  aria-live={getAriaLive(toast.role)}
+                  tabIndex={0}
+                  onMouseEnter={() => manager.pause(toast.id)}
+                  onMouseLeave={() => manager.resume(toast.id)}
+                  onClick={toast.dismissOnClick ? dismiss : undefined}
+                  onKeyDown={handleKeyDown}
+                  style={getToastStyle(
+                    toast.position,
+                    item.phase,
+                    transitionDuration,
+                  )}
+                >
+                  <ToastView
+                    {...toast.payload}
+                    dismiss={dismiss}
+                    toastId={toast.id}
+                  />
+                </div>
+              </ToastErrorBoundary>
+            );
+          })}
+        </div>
+      ))}
     </>
   );
 }
@@ -389,7 +427,6 @@ export function ToastProvider({ children }: ToastProviderProps) {
     const root = document.createElement("div");
     root.setAttribute("data-twist-toast-root", "");
     Object.assign(root.style, rootStyle);
-
     document.body.appendChild(root);
     setPortalRoot(root);
 

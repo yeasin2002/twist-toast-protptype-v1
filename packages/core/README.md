@@ -4,6 +4,8 @@ Framework-agnostic toast state engine for the twist-toast project.
 
 This package contains pure toast behavior with no UI framework dependency.
 It is designed to be consumed by adapter packages such as `@twist-toast/react`.
+The internals are intentionally minimal: ordered state (`order + byId`) and a
+single timer-sync pass that keeps active toast timers in sync with queue state.
 
 ## What It Provides
 
@@ -11,6 +13,7 @@ It is designed to be consumed by adapter packages such as `@twist-toast/react`.
 - Queueing with `maxToasts`
 - Dedupe behavior (`ignore` or `refresh`)
 - Pause/resume timer controls
+- Deterministic timer sync for active toasts
 - Subscription-based state updates
 - Type-safe toast state and input contracts
 

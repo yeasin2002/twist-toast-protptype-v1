@@ -22,10 +22,9 @@ function toPayload(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
-export function createToast<TComponents extends ToastComponentsMap>(
-  components: TComponents,
-  options: CreateToastOptions = {},
-): ToastInstance<TComponents> {
+function toManagerOptions(
+  options: CreateToastOptions,
+): CreateToastManagerOptions {
   const managerOptions: CreateToastManagerOptions = {};
 
   if (options.maxToasts !== undefined) {
@@ -41,7 +40,14 @@ export function createToast<TComponents extends ToastComponentsMap>(
     managerOptions.generateId = options.generateId;
   }
 
-  const manager = createToastManager(managerOptions);
+  return managerOptions;
+}
+
+export function createToast<TComponents extends ToastComponentsMap>(
+  components: TComponents,
+  options: CreateToastOptions = {},
+): ToastInstance<TComponents> {
+  const manager = createToastManager(toManagerOptions(options));
 
   const defaults = {
     duration: options.defaultDuration ?? DEFAULT_DURATION,
@@ -50,26 +56,19 @@ export function createToast<TComponents extends ToastComponentsMap>(
     role: options.defaultRole ?? DEFAULT_ROLE,
   } as const;
 
-  const methods = {} as {
+  const variantMethods = {} as {
     [K in keyof TComponents]: ToastInstance<TComponents>[K];
   };
 
   for (const variant of Object.keys(components) as Array<keyof TComponents>) {
     const method = (payload: unknown, callOptions?: ToastCallOptions) => {
-      const optionsWithDefaults = {
+      const input: ToastInput = {
+        variant: String(variant),
+        payload: toPayload(payload),
         duration: callOptions?.duration ?? defaults.duration,
         position: callOptions?.position ?? defaults.position,
         dismissOnClick: callOptions?.dismissOnClick ?? defaults.dismissOnClick,
         role: callOptions?.role ?? defaults.role,
-      };
-
-      const input: ToastInput = {
-        variant: String(variant),
-        payload: toPayload(payload),
-        duration: optionsWithDefaults.duration,
-        position: optionsWithDefaults.position,
-        dismissOnClick: optionsWithDefaults.dismissOnClick,
-        role: optionsWithDefaults.role,
       };
 
       if (callOptions?.id !== undefined) {
@@ -79,17 +78,14 @@ export function createToast<TComponents extends ToastComponentsMap>(
       return manager.add(input);
     };
 
-    methods[variant] = method as ToastInstance<TComponents>[typeof variant];
+    variantMethods[variant] =
+      method as ToastInstance<TComponents>[typeof variant];
   }
 
   const instance = {
-    ...methods,
-    dismiss: (id: string) => {
-      manager.dismiss(id);
-    },
-    dismissAll: () => {
-      manager.dismissAll();
-    },
+    ...variantMethods,
+    dismiss: (id: string) => manager.dismiss(id),
+    dismissAll: () => manager.dismissAll(),
     destroy: () => {
       manager.destroy();
       unregisterInstance(instance);

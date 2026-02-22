@@ -9,25 +9,19 @@ export interface ToastRegistryEntry {
 
 type RegistryListener = () => void;
 
-const instanceIds = new WeakMap<object, string>();
+let instanceIds = new WeakMap<object, string>();
 const entries = new Map<string, ToastRegistryEntry>();
 const listeners = new Set<RegistryListener>();
 
 let sequence = 0;
 let snapshot: ToastRegistryEntry[] = [];
 
+function rebuildSnapshot(): void {
+  snapshot = Array.from(entries.values());
+}
+
 function emitChange(): void {
-  const newSnapshot = Array.from(entries.values());
-
-  // Only update if actually changed (optimization)
-  if (
-    snapshot.length === newSnapshot.length &&
-    snapshot.every((entry, i) => entry === newSnapshot[i])
-  ) {
-    return;
-  }
-
-  snapshot = newSnapshot;
+  rebuildSnapshot();
   for (const listener of listeners) {
     listener();
   }
@@ -38,20 +32,12 @@ export function registerInstance(
   manager: ToastManager,
   components: ToastComponentsMap,
 ): void {
-  const existingId = instanceIds.get(instance);
-
-  if (existingId) {
-    entries.set(existingId, {
-      id: existingId,
-      manager,
-      components,
-    });
-    emitChange();
-    return;
+  let id = instanceIds.get(instance);
+  if (!id) {
+    id = `toast-instance-${++sequence}`;
+    instanceIds.set(instance, id);
   }
 
-  const id = `toast-instance-${++sequence}`;
-  instanceIds.set(instance, id);
   entries.set(id, {
     id,
     manager,
@@ -86,6 +72,7 @@ export function subscribeToRegistry(listener: RegistryListener): () => void {
 }
 
 export function __resetRegistryForTests(): void {
+  instanceIds = new WeakMap();
   entries.clear();
   listeners.clear();
   sequence = 0;

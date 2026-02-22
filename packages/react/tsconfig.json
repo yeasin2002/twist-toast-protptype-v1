@@ -7,6 +7,10 @@
     "moduleDetection": "force",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@twist-toast/core": ["../core/src/index.ts"]
+    },
     "resolveJsonModule": true,
     "types": [],
     "declaration": true,

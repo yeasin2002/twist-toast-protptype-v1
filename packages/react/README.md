@@ -3,6 +3,9 @@
 React adapter package for the twist-toast project.
 
 This package provides the React-facing API on top of `@twist-toast/core`.
+The public API remains stable while internals stay intentionally small:
+registry-backed zero-config provider wiring, minimal lifecycle reconciliation,
+and built-in fade/slide enter-exit transitions.
 
 ## Scope
 
@@ -16,6 +19,7 @@ This package provides the React-facing API on top of `@twist-toast/core`.
 - Typed toast instance methods from your component map
 - Zero-config `<ToastProvider>` for rendering
 - Pause-on-hover and click-to-dismiss behavior wiring
+- Escape-key dismissal and reduced-motion-aware transitions
 
 ## Usage
 

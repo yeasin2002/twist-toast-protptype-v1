@@ -17,11 +17,6 @@ interface InternalState {
   byId: Map<string, ToastRecord>;
 }
 
-interface TimerEntry {
-  handle: TimerHandle;
-  startedAt: number;
-}
-
 const VALID_POSITIONS: ToastPosition[] = [
   "top-left",
   "top-center",
@@ -33,9 +28,6 @@ const VALID_POSITIONS: ToastPosition[] = [
 
 const VALID_ROLES: ToastRole[] = ["alert", "status"];
 
-/**
- * Validate toast input for runtime safety
- */
 function validateInput(input: ToastInput): void {
   if (input.duration < 0) {
     throw new Error(
@@ -54,9 +46,6 @@ function validateInput(input: ToastInput): void {
   }
 }
 
-/**
- * Calculate remaining time for a toast
- */
 function getRemainingMs(toast: ToastRecord, currentTime: number): number {
   if (toast.paused && toast.pausedAt !== undefined) {
     const elapsed = toast.pausedAt - toast.createdAt - toast.totalPausedMs;
@@ -66,9 +55,6 @@ function getRemainingMs(toast: ToastRecord, currentTime: number): number {
   return Math.max(0, toast.duration - elapsed);
 }
 
-/**
- * Pure function to add a toast to state
- */
 function addToast(state: InternalState, toast: ToastRecord): InternalState {
   const byId = new Map(state.byId);
   byId.set(toast.id, toast);
@@ -79,9 +65,6 @@ function addToast(state: InternalState, toast: ToastRecord): InternalState {
   };
 }
 
-/**
- * Pure function to remove a toast from state
- */
 function removeToast(state: InternalState, id: string): InternalState {
   if (!state.byId.has(id)) {
     return state;
@@ -96,9 +79,6 @@ function removeToast(state: InternalState, id: string): InternalState {
   };
 }
 
-/**
- * Pure function to update a toast in state
- */
 function updateToast(
   state: InternalState,
   id: string,
@@ -118,9 +98,6 @@ function updateToast(
   };
 }
 
-/**
- * Create state snapshot with active and queued toasts
- */
 function createStateSnapshot(
   state: InternalState,
   maxToasts: number,
@@ -141,9 +118,6 @@ function createStateSnapshot(
   };
 }
 
-/**
- * Generate a unique ID using crypto.randomUUID if available, fallback to timestamp + random
- */
 function defaultGenerateId(now: () => number): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -186,7 +160,7 @@ export function createToastManager(
     byId: new Map(),
   };
 
-  const timers = new Map<string, TimerEntry>();
+  const timers = new Map<string, TimerHandle>();
   const listeners = new Set<ToastStateListener>();
 
   function getState(): ToastState {
@@ -200,77 +174,76 @@ export function createToastManager(
     }
   }
 
-  /**
-   * Stop and remove timer for a toast
-   */
   function stopTimer(id: string): void {
-    const timer = timers.get(id);
-    if (!timer) {
+    const handle = timers.get(id);
+    if (!handle) {
       return;
     }
 
-    clearTimeout(timer.handle);
+    clearTimeout(handle);
     timers.delete(id);
   }
 
-  /**
-   * Check if a toast is in the active window
-   */
+  function clearTimers(): void {
+    for (const id of Array.from(timers.keys())) {
+      stopTimer(id);
+    }
+  }
+
+  function getActiveIds(): Set<string> {
+    return new Set(state.order.slice(0, maxToasts));
+  }
+
   function isActiveToast(id: string): boolean {
-    const snapshot = getState();
-    return snapshot.active.some((toast) => toast.id === id);
+    return state.order.slice(0, maxToasts).includes(id);
   }
 
-  /**
-   * Start timer for a specific toast if eligible
-   */
-  function startTimerIfNeeded(id: string): void {
-    const toast = state.byId.get(id);
+  function syncTimers(): void {
+    const activeIds = getActiveIds();
 
-    // Don't start timer if:
-    // - Toast doesn't exist
-    // - Already has timer
-    // - Is paused
-    // - Is sticky (duration <= 0)
-    // - Not in active window
-    if (
-      !toast ||
-      timers.has(id) ||
-      toast.paused ||
-      toast.duration <= 0 ||
-      !isActiveToast(id)
-    ) {
-      return;
-    }
-
-    const remaining = getRemainingMs(toast, now());
-    if (remaining <= 0) {
-      return;
-    }
-
-    const startedAt = now();
-    const handle = setTimeout(() => {
-      dismiss(id);
-    }, remaining);
-
-    timers.set(id, { handle, startedAt });
-  }
-
-  /**
-   * Promote next queued toast to active and start its timer
-   */
-  function promoteQueuedToast(): void {
-    const snapshot = getState();
-    if (snapshot.active.length < maxToasts && snapshot.queued.length > 0) {
-      const nextToast = snapshot.queued[0];
-      if (nextToast) {
-        startTimerIfNeeded(nextToast.id);
+    for (const [id, handle] of Array.from(timers.entries())) {
+      const toast = state.byId.get(id);
+      if (!toast || !activeIds.has(id) || toast.paused || toast.duration <= 0) {
+        clearTimeout(handle);
+        timers.delete(id);
       }
+    }
+
+    const currentTime = now();
+    const expiredIds: string[] = [];
+
+    for (const id of activeIds) {
+      if (timers.has(id)) {
+        continue;
+      }
+
+      const toast = state.byId.get(id);
+      if (!toast || toast.paused || toast.duration <= 0) {
+        continue;
+      }
+
+      const remaining = getRemainingMs(toast, currentTime);
+      if (remaining <= 0) {
+        expiredIds.push(id);
+        continue;
+      }
+
+      const handle = setTimeout(() => {
+        dismiss(id);
+      }, remaining);
+
+      timers.set(id, handle);
+    }
+
+    if (expiredIds.length > 0) {
+      for (const id of expiredIds) {
+        state = removeToast(state, id);
+      }
+      syncTimers();
     }
   }
 
   function add(input: ToastInput): string {
-    // Validate input
     validateInput(input);
 
     const id = input.id ?? generateId();
@@ -281,8 +254,6 @@ export function createToastManager(
         return id;
       }
 
-      // Dedupe: refresh - remove old, add new
-      stopTimer(id);
       state = removeToast(state, id);
     }
 
@@ -298,7 +269,7 @@ export function createToastManager(
     };
 
     state = addToast(state, toast);
-    startTimerIfNeeded(id);
+    syncTimers();
     notify();
 
     return id;
@@ -309,16 +280,13 @@ export function createToastManager(
       return;
     }
 
-    stopTimer(id);
     state = removeToast(state, id);
-    promoteQueuedToast();
+    syncTimers();
     notify();
   }
 
   function dismissAll(): void {
-    for (const id of Array.from(timers.keys())) {
-      stopTimer(id);
-    }
+    clearTimers();
 
     state = {
       order: [],
@@ -331,27 +299,16 @@ export function createToastManager(
   function pause(id: string): void {
     const toast = state.byId.get(id);
 
-    // Can only pause active, non-paused, timed toasts
     if (!toast || toast.paused || toast.duration <= 0 || !isActiveToast(id)) {
       return;
     }
 
-    const timer = timers.get(id);
-    if (!timer) {
-      return;
-    }
-
-    // Calculate elapsed time and update pause state
-    const elapsed = Math.max(0, now() - timer.startedAt);
-    const currentTime = now();
-
-    stopTimer(id);
     state = updateToast(state, id, {
       paused: true,
-      pausedAt: currentTime,
-      totalPausedMs: toast.totalPausedMs + 0, // Will be updated on resume
+      pausedAt: now(),
     });
 
+    syncTimers();
     notify();
   }
 
@@ -361,8 +318,7 @@ export function createToastManager(
       return;
     }
 
-    // Calculate total paused time
-    const pauseDuration = now() - toast.pausedAt;
+    const pauseDuration = Math.max(0, now() - toast.pausedAt);
     const totalPausedMs = toast.totalPausedMs + pauseDuration;
 
     state = updateToast(state, id, {
@@ -371,7 +327,7 @@ export function createToastManager(
       totalPausedMs,
     });
 
-    startTimerIfNeeded(id);
+    syncTimers();
     notify();
   }
 
@@ -385,9 +341,7 @@ export function createToastManager(
   }
 
   function destroy(): void {
-    for (const id of Array.from(timers.keys())) {
-      stopTimer(id);
-    }
+    clearTimers();
 
     listeners.clear();
 
