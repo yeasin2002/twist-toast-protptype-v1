@@ -32,17 +32,15 @@ export class ToastErrorBoundary extends Component<
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error for debugging
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[twist-toast] Toast component error:", error, errorInfo);
-    }
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    // Log error for debugging (bundler will tree-shake in production)
+    console.error("[twist-toast] Toast component error:", error, errorInfo);
 
     // Notify parent to dismiss the broken toast
     this.props.onError(error);
   }
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
       // Don't render anything if there's an error
       return null;

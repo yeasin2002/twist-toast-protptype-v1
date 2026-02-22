@@ -3,11 +3,9 @@ import type {
   ToastPosition,
   ToastRecord,
   ToastRole,
-  ToastState,
 } from "@twist-toast/core";
 import type { CSSProperties, ReactNode } from "react";
 import {
-  Component,
   useEffect,
   useMemo,
   useRef,
@@ -154,32 +152,6 @@ function getToastStyle(
     transition: `opacity ${TRANSITION_DURATION_MS}ms ease, transform ${TRANSITION_DURATION_MS}ms ease`,
     willChange: "opacity, transform",
   };
-}
-
-/**
- * Error boundary to catch toast component errors
- */
-class ToastErrorBoundary extends Component<
-  { children: ReactNode; onError: () => void },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: unknown) {
-    console.error("Toast render error:", error, errorInfo);
-    this.props.onError();
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return null;
-    }
-    return this.props.children;
-  }
 }
 
 interface ManagerToastsProps {
