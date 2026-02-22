@@ -5,7 +5,7 @@
     "jsx": "react-jsx",
     "lib": ["es2023", "DOM"],
     "moduleDetection": "force",
-    "module": "preserve",
+    "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "types": [],
