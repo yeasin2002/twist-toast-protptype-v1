@@ -26,6 +26,25 @@ export const TOAST_WRAPPER_STYLE: CSSProperties = {
   width: "100%",
 };
 
+type MotionCSSProperties = CSSProperties & Record<`--${string}`, string>;
+
+export function getToastWrapperStyle(position: ToastPosition): CSSProperties {
+  const enterDistanceX = position.endsWith("left")
+    ? "-8px"
+    : position.endsWith("right")
+      ? "8px"
+      : "0px";
+  const enterDistanceY = position.startsWith("top") ? "-8px" : "8px";
+
+  const style: MotionCSSProperties = {
+    ...TOAST_WRAPPER_STYLE,
+    "--twist-toast-enter-distance-x": enterDistanceX,
+    "--twist-toast-enter-distance-y": enterDistanceY,
+  };
+
+  return style;
+}
+
 export function getViewportStyle(position: ToastPosition): CSSProperties {
   switch (position) {
     case "top-right":

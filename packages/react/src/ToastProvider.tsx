@@ -13,9 +13,10 @@ import {
 } from "./registry";
 import {
   TOAST_POSITIONS,
-  TOAST_WRAPPER_STYLE,
+  getToastWrapperStyle,
   getViewportStyle,
 } from "./position-styles";
+import { ensureToastMotionStyles } from "./motion-styles";
 import type { ToastProviderProps } from "./types";
 
 interface RenderedToast {
@@ -134,6 +135,8 @@ export function ToastProvider({
       return;
     }
 
+    ensureToastMotionStyles();
+
     const host = document.createElement("div");
     host.setAttribute("data-twist-toast-scope", scope);
     document.body.appendChild(host);
@@ -191,6 +194,10 @@ export function ToastProvider({
                     <div
                       key={entry.key}
                       aria-label={`Toast ${entry.toast.variant}`}
+                      data-twist-toast-item=""
+                      data-twist-toast-side={
+                        position.startsWith("top") ? "top" : "bottom"
+                      }
                       onClick={entry.toast.dismissOnClick ? dismiss : undefined}
                       onKeyDown={(event) => {
                         if (event.key !== "Escape") {
@@ -201,7 +208,7 @@ export function ToastProvider({
                         dismiss();
                       }}
                       role="button"
-                      style={TOAST_WRAPPER_STYLE}
+                      style={getToastWrapperStyle(position)}
                       tabIndex={0}
                     >
                       <div

@@ -61,6 +61,34 @@ toast.dismissAll();
 - A provider only renders toasts from the same scope.
 - One provider per scope is the supported behavior.
 
+## Motion Overrides
+
+`ToastProvider` includes a default smooth enter transition at wrapper level.
+You can override motion with CSS variables or selectors:
+
+```css
+/* Target all wrappers */
+[data-twist-toast-item] {
+  --twist-toast-enter-duration: 260ms;
+  --twist-toast-enter-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --twist-toast-enter-scale: 0.96;
+}
+
+/* Optional global directional override */
+:root {
+  --twist-toast-enter-distance: 14px;
+}
+```
+
+Available variables:
+
+- `--twist-toast-enter-duration`
+- `--twist-toast-enter-easing`
+- `--twist-toast-enter-scale`
+- `--twist-toast-enter-distance`
+- `--twist-toast-transition-duration`
+- `--twist-toast-transition-easing`
+
 ## Build
 
 ```bash
