@@ -5,8 +5,11 @@
     "jsx": "react-jsx",
     "lib": ["es2023", "DOM"],
     "moduleDetection": "force",
-    "module": "preserve",
+    "module": "esnext",
     "moduleResolution": "bundler",
+    "paths": {
+      "@twist-toast/core": ["../core/src/index.ts"]
+    },
     "resolveJsonModule": true,
     "types": [],
     "declaration": true,

@@ -2,7 +2,10 @@
 
 React adapter package for the twist-toast project.
 
-This package should contain React-specific integration such as providers, hooks, and rendering utilities that sit on top of `@twist-toast/core`.
+This package provides the React-facing API on top of `@twist-toast/core`.
+The public API remains stable while internals stay intentionally small:
+registry-backed zero-config provider wiring, minimal lifecycle reconciliation,
+and built-in fade/slide enter-exit transitions.
 
 ## Scope
 
@@ -10,17 +13,36 @@ This package should contain React-specific integration such as providers, hooks,
 - UI integration layer for the core package
 - Should not duplicate framework-agnostic business logic from `@twist-toast/core`
 
-## Current Status
+## What It Provides
 
-The package is currently scaffolded and exports a sample component.
+- `createToast(components, options?)`
+- Typed toast instance methods from your component map
+- Zero-config `<ToastProvider>` for rendering
+- Pause-on-hover and click-to-dismiss behavior wiring
+- Escape-key dismissal and reduced-motion-aware transitions
 
-### Current Export
+## Usage
 
 ```tsx
-import { MyButton } from "@twist-toast/react";
+import { ToastProvider, createToast } from "@twist-toast/react";
+import type { ToastComponentProps } from "@twist-toast/react";
 
-export function App() {
-  return <MyButton type="primary" />;
+const toast = createToast({
+  success: ({ title }: ToastComponentProps<{ title: string }>) => (
+    <div>{title}</div>
+  ),
+});
+```
+
+```tsx
+function App() {
+  return (
+    <ToastProvider>
+      <button onClick={() => toast.success({ title: "Saved!" })}>
+        Trigger
+      </button>
+    </ToastProvider>
+  );
 }
 ```
 
@@ -43,6 +65,8 @@ Watch mode:
 pnpm --filter @twist-toast/react dev
 ```
 
-## Notes
+## Test
 
-As the project evolves, this package should become the official React integration layer for twist-toast, while relying on `@twist-toast/core` for toast behavior/state logic.
+```bash
+pnpm --filter @twist-toast/react test
+```
