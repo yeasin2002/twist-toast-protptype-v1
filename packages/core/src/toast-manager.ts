@@ -9,16 +9,7 @@ import type {
   ToastStateListener,
 } from "./types";
 import { DEFAULT_DEDUPE, DEFAULT_MAX_TOASTS } from "./types";
-import { validateInput } from "./utils/validate-Input";
-
-function getRemainingMs(toast: ToastRecord, currentTime: number): number {
-  if (toast.paused && toast.pausedAt !== undefined) {
-    const elapsed = toast.pausedAt - toast.createdAt - toast.totalPausedMs;
-    return Math.max(0, toast.duration - elapsed);
-  }
-  const elapsed = currentTime - toast.createdAt - toast.totalPausedMs;
-  return Math.max(0, toast.duration - elapsed);
-}
+import { defaultGenerateId, getRemainingMs, validateInput } from "./utils";
 
 function addToast(state: InternalState, toast: ToastRecord): InternalState {
   const byId = new Map(state.byId);
@@ -81,13 +72,6 @@ function createStateSnapshot(
     active: all.slice(0, maxToasts),
     queued: all.slice(maxToasts),
   };
-}
-
-function defaultGenerateId(now: () => number): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `toast-${now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /**
