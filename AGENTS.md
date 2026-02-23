@@ -1,4 +1,5 @@
 <!-- Product -->
+
 # 1. Product Overview
 
 twist-toast is a React toast notification library that solves design lock-in by letting developers own every pixel of the UI while the library manages behavior. a lightweight, minimal, and flexible solution for teams that want to build custom toast components without reinventing the wheel on state management and accessibility.
@@ -9,15 +10,14 @@ twist-toast is a React toast notification library that solves design lock-in by 
 - Library handles state management, logics, accessibility
 - Zero runtime dependencies beyond React
 - TypeScript-first with full type inference from component definitions
--  Small bundle size (≤5 KB gzipped) with tree-shaking support, Should be Minimal and lightweight, no unnecessary features or dependencies.
+- Small bundle size (≤5 KB gzipped) with tree-shaking support, Should be Minimal and lightweight, no unnecessary features or dependencies.
 
 ## Key Features
 
 - `createToast()` factory pattern for typed toast instances
 - Zero-config `<ToastProvider>` wrapper
 - Pause on hover, keyboard accessible
-- No build in variants, all will be  custom  like success, error, warning, info, custom will also provided by the users. 
-
+- No build in variants, all will be custom like success, error, warning, info, custom will also provided by the users.
 
 ## Target Users
 
@@ -27,12 +27,10 @@ twist-toast is a React toast notification library that solves design lock-in by 
 
 ## Phase 1 Scope
 
-React 18+ support with TypeScript generics, comprehensive testing, and npm publication. Future phases will add  multi-framework support.
-
-
-
+React 18+ support with TypeScript generics, comprehensive testing, and npm publication. Future phases will add multi-framework support.
 
 <!-- Structure -->
+
 # 2. Project Structure
 
 ## Monorepo Layout
@@ -43,7 +41,7 @@ twist-toast/
 ├── packages/           # Workspace packages
 │   ├── core/   # Core library (main deliverable)
 │   ├── react/ # React-specific utilities or providers (if needed in future)
-│   ├── [others] # in future I will add other framework specific packages like Vue, Angular, Svelte, etc. support, (If needed). not now. 
+│   ├── [others] # in future I will add other framework specific packages like Vue, Angular, Svelte, etc. support, (If needed). not now.
 │
 ├── tooling/           # Workspace tooling packages
 │   ├── eslint-config/ # Shared ESLint configurations
@@ -55,7 +53,7 @@ twist-toast/
 
 ## Package Organization
 
-### twist-toast (Core Library- initially, will be changed based on project needs  )
+### twist-toast (Core Library- initially, will be changed based on project needs )
 
 ```
 packages/core/
@@ -120,6 +118,7 @@ Packages reference shared configs via workspace protocol:
 - **Shared configs**: Centralized in config packages for reuse
 
 <!-- tech -->
+
 # 3. Tech Stack
 
 ## Build System
