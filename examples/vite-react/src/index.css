@@ -1,6 +1,8 @@
+@import "tailwindcss";
+
 :root {
-  font-family: "Inter", "Segoe UI", sans-serif;
-  line-height: 1.45;
+  font-family: "Sora", "Manrope", "Inter", "Segoe UI", sans-serif;
+  line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,23 +19,19 @@
 body {
   margin: 0;
   min-width: 320px;
-  background: linear-gradient(180deg, #eef4fa 0%, #f6f9fc 45%, #ffffff 100%);
-  color: #162838;
+  color: #122235;
+  background:
+    radial-gradient(circle at 15% -20%, #b8e5ff66, transparent 45%),
+    radial-gradient(circle at 85% 0%, #d9f7ff73, transparent 40%),
+    linear-gradient(180deg, #f5fbff 0%, #edf5fc 40%, #f8fbff 100%);
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
-  padding: 1rem;
-}
-
-button {
-  font: inherit;
-  border-radius: 10px;
-  cursor: pointer;
 }
 
 button:focus-visible {
-  outline: 3px solid #4f6f91;
+  outline: 3px solid #4d7daa;
   outline-offset: 1px;
 }

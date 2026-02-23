@@ -33,6 +33,14 @@ React 18+ support with TypeScript generics, comprehensive testing, and npm publi
 
 # 2. Project Structure
 
+## Skills 
+AI Agent Skills, use to be more powerful and get more knowledge. 
+
+All skills available inside .agents\skills folder, and each skill have its own folder with all related files to that skill.
+
+
+
+
 ## Monorepo Layout
 
 ```
