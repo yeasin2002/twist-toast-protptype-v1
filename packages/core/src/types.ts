@@ -48,6 +48,13 @@ export interface ToastState {
   readonly queued: readonly ToastRecord[];
 }
 
+export type TimerHandle = ReturnType<typeof setTimeout>;
+
+export interface InternalState {
+  order: string[];
+  byId: Map<string, ToastRecord>;
+}
+
 export interface CreateToastManagerOptions {
   /**
    * Maximum number of visible toasts (default: 5, minimum: 1)

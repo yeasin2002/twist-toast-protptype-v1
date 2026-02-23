@@ -1,50 +1,15 @@
 import type {
   CreateToastManagerOptions,
+  InternalState,
+  TimerHandle,
   ToastInput,
   ToastManager,
-  ToastPosition,
   ToastRecord,
-  ToastRole,
   ToastState,
   ToastStateListener,
 } from "./types";
 import { DEFAULT_DEDUPE, DEFAULT_MAX_TOASTS } from "./types";
-
-type TimerHandle = ReturnType<typeof setTimeout>;
-
-interface InternalState {
-  order: string[];
-  byId: Map<string, ToastRecord>;
-}
-
-const VALID_POSITIONS: ToastPosition[] = [
-  "top-left",
-  "top-center",
-  "top-right",
-  "bottom-left",
-  "bottom-center",
-  "bottom-right",
-];
-
-const VALID_ROLES: ToastRole[] = ["alert", "status"];
-
-function validateInput(input: ToastInput): void {
-  if (input.duration < 0) {
-    throw new Error(
-      `Invalid duration: ${input.duration}. Duration must be non-negative.`,
-    );
-  }
-  if (!VALID_POSITIONS.includes(input.position)) {
-    throw new Error(
-      `Invalid position: ${input.position}. Must be one of: ${VALID_POSITIONS.join(", ")}`,
-    );
-  }
-  if (!VALID_ROLES.includes(input.role)) {
-    throw new Error(
-      `Invalid role: ${input.role}. Must be one of: ${VALID_ROLES.join(", ")}`,
-    );
-  }
-}
+import { validateInput } from "./utils/validate-Input";
 
 function getRemainingMs(toast: ToastRecord, currentTime: number): number {
   if (toast.paused && toast.pausedAt !== undefined) {
