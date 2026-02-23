@@ -1,7 +1,7 @@
 <!-- Product -->
 # 1. Product Overview
 
-twist-toast is a React toast notification library that solves design lock-in by letting developers own every pixel of the UI while the library manages behavior.
+twist-toast is a React toast notification library that solves design lock-in by letting developers own every pixel of the UI while the library manages behavior. a lightweight, minimal, and flexible solution for teams that want to build custom toast components without reinventing the wheel on state management and accessibility.
 
 ## Core Value Proposition
 
@@ -9,6 +9,7 @@ twist-toast is a React toast notification library that solves design lock-in by 
 - Library handles state management, logics, accessibility
 - Zero runtime dependencies beyond React
 - TypeScript-first with full type inference from component definitions
+-  Small bundle size (≤5 KB gzipped) with tree-shaking support, Should be Minimal and lightweight, no unnecessary features or dependencies.
 
 ## Key Features
 
@@ -26,7 +27,7 @@ twist-toast is a React toast notification library that solves design lock-in by 
 
 ## Phase 1 Scope
 
-React 17+ support with TypeScript generics, comprehensive testing, and npm publication. Future phases will add CLI tooling and multi-framework support.
+React 18+ support with TypeScript generics, comprehensive testing, and npm publication. Future phases will add  multi-framework support.
 
 
 
