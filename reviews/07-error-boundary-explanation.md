@@ -13,9 +13,11 @@
 Error Boundaries in React **must** be class components. This is not a coding style choice or best practice issue - it's a React framework requirement.
 
 **From React Official Documentation:**
+
 > Error boundaries are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI. Error boundaries catch errors during rendering, in lifecycle methods, and in constructors of the whole tree below them.
 >
 > **Note: Error boundaries do not catch errors for:**
+>
 > - Event handlers
 > - Asynchronous code (e.g. setTimeout or requestAnimationFrame callbacks)
 > - Server side rendering
@@ -26,6 +28,7 @@ Error Boundaries in React **must** be class components. This is not a coding sty
 ### No Functional Component Alternative
 
 As of React 18 (and React 19), there is **no hook equivalent** for error boundaries:
+
 - ❌ No `useErrorBoundary()` hook
 - ❌ No `useCatch()` hook
 - ❌ No functional component API for `componentDidCatch`
@@ -87,18 +90,22 @@ export class ToastErrorBoundary extends Component<
 ### Improvements Made
 
 **1. Fixed Import Issue**
+
 - ❌ Before: `React.ErrorInfo` (requires React namespace import)
 - ✅ After: `ErrorInfo` (direct type import)
 
 **2. Added Constructor**
+
 - ✅ Explicit constructor with proper state initialization
 - ✅ Follows React class component best practices
 
 **3. Environment-Aware Logging**
+
 - ✅ Only logs errors in development mode
 - ✅ Prevents console pollution in production
 
 **4. Better Documentation**
+
 - ✅ Added note explaining why class component is required
 - ✅ Clear JSDoc comments
 
@@ -107,6 +114,7 @@ export class ToastErrorBoundary extends Component<
 ## Comparison with Vercel Best Practices
 
 The Vercel React Best Practices guide focuses on **functional components and hooks** because:
+
 1. They're the modern React paradigm
 2. They're more performant in most cases
 3. They're easier to optimize and test
@@ -116,6 +124,7 @@ However, the guide **does not prohibit class components** when they're the only 
 ### What the Guide Says
 
 The guide doesn't have a specific rule about error boundaries because:
+
 - Error boundaries are a special case
 - They're framework-mandated to be class components
 - There's no alternative to recommend
@@ -123,6 +132,7 @@ The guide doesn't have a specific rule about error boundaries because:
 ### Following the Spirit of the Guide
 
 Even though we must use a class component, we follow best practices:
+
 - ✅ Minimal state (only `hasError` boolean)
 - ✅ No unnecessary lifecycle methods
 - ✅ Clear, focused responsibility
@@ -149,10 +159,12 @@ import { ErrorBoundary } from 'react-error-boundary'
 ```
 
 **Pros:**
+
 - Well-tested library
 - More features (reset, fallback components)
 
 **Cons:**
+
 - ❌ Adds external dependency (violates "zero dependencies" goal)
 - ❌ Increases bundle size (~2 KB)
 - ❌ Still uses class component internally
@@ -173,6 +185,7 @@ try {
 ```
 
 **Cons:**
+
 - ❌ Doesn't work! Try-catch can't catch React render errors
 - ❌ React errors are thrown asynchronously
 - ❌ Would only catch synchronous JavaScript errors
@@ -184,6 +197,7 @@ try {
 **Option:** Let toast errors crash the app
 
 **Cons:**
+
 - ❌ Terrible user experience
 - ❌ One broken toast crashes entire app
 - ❌ Not production-ready
@@ -199,46 +213,49 @@ try {
 Error boundaries are notoriously difficult to test. Here's our approach:
 
 **1. Manual Testing**
+
 ```typescript
 // Create a toast that throws
 const BrokenToast = () => {
-  throw new Error('Intentional error')
-}
+  throw new Error("Intentional error");
+};
 
 const toast = createToast({
-  broken: BrokenToast
-})
+  broken: BrokenToast,
+});
 
-toast.broken({})
+toast.broken({});
 // App should not crash, toast should be dismissed
 ```
 
 **2. Automated Testing**
+
 ```typescript
 it('catches toast component errors', () => {
   const BrokenToast = () => {
     throw new Error('Test error')
   }
-  
+
   const toast = createToast({
     broken: BrokenToast
   })
-  
+
   render(<ToastProvider><App /></ToastProvider>)
-  
+
   // Suppress console.error for this test
   const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-  
+
   toast.broken({})
-  
+
   // App should still be mounted
   expect(screen.getByText('App')).toBeInTheDocument()
-  
+
   spy.mockRestore()
 })
 ```
 
 **3. Integration Testing**
+
 - Test with real user components
 - Test with async errors
 - Test with nested components
@@ -252,6 +269,7 @@ it('catches toast component errors', () => {
 **Increase:** +0.10 kB (+100 bytes)
 
 **Analysis:**
+
 - Class component adds minimal overhead
 - Error handling logic is small
 - Well worth the safety benefit
@@ -267,6 +285,7 @@ We can refactor to functional components when:
 3. **Community consensus emerges** on alternative patterns
 
 Until then, class components for error boundaries are:
+
 - ✅ The only option
 - ✅ Officially recommended by React
 - ✅ Used by all major libraries
@@ -277,15 +296,19 @@ Until then, class components for error boundaries are:
 ## Comparison with Other Libraries
 
 ### react-hot-toast
+
 Uses class component error boundary internally.
 
 ### sonner
+
 Uses class component error boundary internally.
 
 ### react-toastify
+
 Uses class component error boundary internally.
 
 ### Conclusion
+
 **All major toast libraries use class components for error boundaries** because there's no alternative.
 
 ---
@@ -295,24 +318,28 @@ Uses class component error boundary internally.
 Even with a class component, we follow modern React best practices:
 
 ### 1. Minimal State
+
 ```typescript
 // Only track what's necessary
-state = { hasError: boolean }
+state = { hasError: boolean };
 ```
 
 ### 2. Static Methods
+
 ```typescript
 // Use static method for state derivation
 static getDerivedStateFromError()
 ```
 
 ### 3. Proper Typing
+
 ```typescript
 // Full TypeScript support
-Component<Props, State>
+Component<Props, State>;
 ```
 
 ### 4. Clear Responsibility
+
 ```typescript
 // Single purpose: catch errors and notify parent
 componentDidCatch(error, errorInfo) {
@@ -321,12 +348,14 @@ componentDidCatch(error, errorInfo) {
 ```
 
 ### 5. No Side Effects
+
 ```typescript
 // No subscriptions, timers, or external state
 // Just error catching
 ```
 
 ### 6. Environment Awareness
+
 ```typescript
 // Only log in development
 if (process.env.NODE_ENV !== 'production') {
@@ -360,6 +389,7 @@ When documenting this for users, we should:
 ### React 19+ Features
 
 Monitor React releases for:
+
 - Error boundary hooks
 - Suspense error handling improvements
 - New error recovery APIs
@@ -367,6 +397,7 @@ Monitor React releases for:
 ### Alternative Patterns
 
 Watch for:
+
 - Community libraries with better APIs
 - Framework-level error handling
 - New React paradigms
@@ -374,6 +405,7 @@ Watch for:
 ### Refactoring Plan
 
 When functional error boundaries become available:
+
 1. Create new functional implementation
 2. Test thoroughly
 3. Deprecate class component
@@ -384,6 +416,7 @@ When functional error boundaries become available:
 ## Conclusion
 
 **The ToastErrorBoundary class component is:**
+
 - ✅ Correctly implemented
 - ✅ Following React best practices
 - ✅ Required by React framework

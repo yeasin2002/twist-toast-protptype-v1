@@ -155,6 +155,7 @@ pnpm format         # ✅ 67 files
 ## Recent Fixes
 
 ### TypeScript Configuration (2026-02-22)
+
 - ✅ Created `packages/core/tsconfig.json`
 - ✅ Fixed "Cannot find name 'Map'" error
 - ✅ All built-in types now recognized
