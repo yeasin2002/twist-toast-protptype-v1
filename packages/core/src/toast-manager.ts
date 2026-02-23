@@ -1,3 +1,9 @@
+import {
+  addToast,
+  createStateSnapshot,
+  removeToast,
+  updateToast,
+} from "./helpers/toast-handlers";
 import type {
   CreateToastManagerOptions,
   InternalState,
@@ -10,69 +16,6 @@ import type {
 } from "./types";
 import { DEFAULT_DEDUPE, DEFAULT_MAX_TOASTS } from "./types";
 import { defaultGenerateId, getRemainingMs, validateInput } from "./utils";
-
-function addToast(state: InternalState, toast: ToastRecord): InternalState {
-  const byId = new Map(state.byId);
-  byId.set(toast.id, toast);
-
-  return {
-    byId,
-    order: [...state.order, toast.id],
-  };
-}
-
-function removeToast(state: InternalState, id: string): InternalState {
-  if (!state.byId.has(id)) {
-    return state;
-  }
-
-  const byId = new Map(state.byId);
-  byId.delete(id);
-
-  return {
-    byId,
-    order: state.order.filter((item) => item !== id),
-  };
-}
-
-function updateToast(
-  state: InternalState,
-  id: string,
-  patch: Partial<ToastRecord>,
-): InternalState {
-  const existing = state.byId.get(id);
-  if (!existing) {
-    return state;
-  }
-
-  const byId = new Map(state.byId);
-  byId.set(id, { ...existing, ...patch });
-
-  return {
-    byId,
-    order: state.order,
-  };
-}
-
-function createStateSnapshot(
-  state: InternalState,
-  maxToasts: number,
-): ToastState {
-  const all: ToastRecord[] = [];
-
-  for (const id of state.order) {
-    const toast = state.byId.get(id);
-    if (toast) {
-      all.push(toast);
-    }
-  }
-
-  return {
-    all,
-    active: all.slice(0, maxToasts),
-    queued: all.slice(maxToasts),
-  };
-}
 
 /**
  * Creates a toast manager instance for managing toast notifications.
