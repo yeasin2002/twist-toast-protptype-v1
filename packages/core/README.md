@@ -1,41 +1,44 @@
 # @twist-toast/core
 
-Framework-agnostic core primitives for the twist-toast project.
+Framework-agnostic toast manager used by adapter packages (React now, other frameworks later).
 
-This package is the non-React foundation layer. It should contain pure toast logic (state, queueing, timers, dedupe, lifecycle) that other adapters can build on.
+## What It Owns
 
-## Scope
+- ordered queue + max visible window
+- auto-dismiss timers
+- duplicate id handling (`refresh` or `ignore`)
+- `dismiss(id)` / `dismissAll()`
+- pause/resume by toast position
+- subscription API for UI adapters
 
-- No React-specific code
-- Core logic and shared types only
-- Intended to be consumed by framework adapters (for example `@twist-toast/react`)
-
-## Current Status
-
-The package is in early scaffold stage.
-
-### Current Export
+## Public API
 
 ```ts
-import { fn } from "@twist-toast/core";
+import { createToastManager } from "@twist-toast/core";
 
-console.log(fn()); // "Hello, tsdown!"
+const manager = createToastManager({
+  defaultDuration: 4000,
+  defaultPosition: "top-right",
+  maxToasts: 5,
+  dedupe: "refresh",
+  scope: "default",
+});
 ```
+
+Manager methods:
+
+- `trigger(variant, payload, options?)`
+- `dismiss(id)`
+- `dismissAll()`
+- `pauseByPosition(position)`
+- `resumeByPosition(position)`
+- `getSnapshot()`
+- `subscribe(listener)`
+- `destroy()`
 
 ## Build
 
-From repository root:
-
 ```bash
 pnpm --filter @twist-toast/core build
+pnpm --filter @twist-toast/core check-types
 ```
-
-Watch mode:
-
-```bash
-pnpm --filter @twist-toast/core dev
-```
-
-## Notes
-
-When the toast manager is implemented, this package should remain framework-agnostic and expose reusable core APIs for adapters.

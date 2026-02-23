@@ -1,42 +1,124 @@
-#root {
-  max-width: 1280px;
+.demo-shell {
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  max-width: 960px;
+  display: grid;
+  gap: 1rem;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.demo-header {
+  border: 1px solid #d5d9df;
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+  background: #f7fafc;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #47627a;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.demo-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
 }
 
-.card {
-  padding: 2em;
+.demo-header p {
+  margin: 0.5rem 0 0;
+  color: #405769;
 }
 
-.read-the-docs {
-  color: #888;
+.panel {
+  border: 1px solid #d5d9df;
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+  background: #ffffff;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.panel-muted {
+  background: #f8f5fb;
+  border-color: #dacde9;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.controls button {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #b9c4cf;
+  background: #fbfcfd;
+  color: #203040;
+}
+
+.controls button:hover {
+  border-color: #4f6f91;
+}
+
+.toast-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+  border: 1px solid #c5ced9;
+  border-radius: 12px;
+  padding: 0.8rem;
+  box-shadow: 0 8px 24px rgba(12, 18, 26, 0.12);
+  background: #ffffff;
+}
+
+.toast-title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.toast-description {
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+  color: #384b5d;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.toast-card button {
+  border: 1px solid #9fb0c2;
+  background: #f6f8fb;
+  color: #1e3144;
+  min-height: 32px;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.55rem;
+}
+
+.toast-success {
+  border-color: #7bbf95;
+  background: #effaf3;
+}
+
+.toast-error {
+  border-color: #d38c8c;
+  background: #fff4f4;
+}
+
+.toast-custom {
+  background: #f7fbfd;
+}
+
+.toast-modal {
+  border-color: #c1a7df;
+  background: #f6f0fc;
 }

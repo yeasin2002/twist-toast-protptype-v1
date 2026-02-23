@@ -1,12 +1,8 @@
 {
-  "extends": "@twist-toast/typescript-config/react-library.json",
+  "extends": "@twist-toast/typescript-config/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "paths": {
-      "@twist-toast/core": ["../core/src/index.ts"]
-    },
     "declaration": true,
     "emitDeclarationOnly": true,
     "types": [],

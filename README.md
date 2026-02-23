@@ -1,119 +1,106 @@
 # twist-toast
 
-Design-system-first toast notifications.
+`twist-toast` is a design-system-first toast library.
 
-`twist-toast` is an open-source library focused on one principle: you own every pixel of the toast UI, while the library manages behavior
+- You own toast UI and styles.
+- The library handles queueing, timers, dedupe, dismissal, accessibility defaults, and typed APIs.
+- Runtime dependency surface is minimal: React peer deps only in the React adapter.
 
-## Why twist-toast
+## Packages
 
-Most toast libraries bundle UI opinions that are hard to align with product design systems.  
-`twist-toast` separates concerns:
+- `@twist-toast/core`: framework-agnostic toast state manager.
+- `@twist-toast/react`: React `createToast()` factory + `ToastProvider`.
 
-- Your components define presentation
-- The library handles behavior and orchestration
-- TypeScript infers payload types from your component map
-
-## Product Direction
-
-The primary integration model is:
-
-1. Define your toast components
-2. Call `createToast(components, options?)`
-3. Use a `<ToastProvider>` in your app root that will render toasts via a portal
-
-Note: this library doses't include any UI components or styles. You are responsible for implementing the toast presentation layer, which gives you full control to match your design system. by default we don't have any toast component. users need to configure like this:
+## Quick Start
 
 ```tsx
-import { createToast } from "@twist-toast/react";
-import { SuccessComponent } from "./success-component";
+import {
+  createToast,
+  ToastProvider,
+  type ToastComponentProps,
+} from "@twist-toast/react";
 
-const toast = createToast({
-  success: SuccessComponent,
-  // other toast types...
-});
+type SuccessPayload = { title: string; description?: string };
+
+function SuccessToast({
+  title,
+  description,
+  dismiss,
+}: ToastComponentProps<SuccessPayload>) {
+  return (
+    <div>
+      <strong>{title}</strong>
+      {description ? <p>{description}</p> : null}
+      <button onClick={dismiss}>Dismiss</button>
+    </div>
+  );
+}
+
+export const toast = createToast(
+  { success: SuccessToast },
+  {
+    scope: "global",
+    maxToasts: 5,
+    defaultDuration: 4000,
+    defaultPosition: "top-right",
+  },
+);
+
+export function App({ children }: { children: React.ReactNode }) {
+  return <ToastProvider scope="global">{children}</ToastProvider>;
+}
 ```
 
-## Target Capabilities (Phase 1)
+Trigger:
 
-- `createToast()` factory with type inference
-- Queue management with configurable max visible toasts
-- Deduplication by toast `id` (ignore/refresh behavior)
-- Programmatic dismissal: `dismiss(id)` and `dismissAll()`
-- Per-toast options: `duration`, `position`, `dismissOnClick`, `id`, `role`
-- Accessibility defaults (`alert`/`status`, non-focus-stealing behavior)
-
-## Monorepo Packages
-
-`@twist-toast/core` - Framework-agnostic core logic:
-`@twist-toast/react` -React adapter layer, React-facing APIs built on top of `@twist-toast/core`
-
-## Repository Layout
-
-```text
-twist-toast/
-├── packages/
-│   ├── core/
-│   └── react/
-├── examples/
-├── tooling/
-└── PROJECT-BRD.md
+```ts
+toast.success({ title: "Saved" });
+toast.success(
+  { title: "Queued" },
+  { id: "job-1", duration: 8000, role: "status" },
+);
+toast.dismiss("job-1");
+toast.dismissAll();
 ```
 
-## Current Status
+## API Overview
 
-This repository is currently under active development.  
-`@twist-toast/core` and `@twist-toast/react` are scaffolded and being implemented toward the BRD goals.
+`createToast(components, options?)`
 
-## Local Development
+- `components`: variant-to-component map.
+- `options`: global defaults.
+  - `defaultDuration` (default `4000`)
+  - `defaultPosition` (default `"top-right"`)
+  - `maxToasts` (default `5`)
+  - `dedupe` (`"refresh"` default, or `"ignore"`)
+  - `scope` (default `"default"`)
 
-### Requirements
+Per-call options (`toast.variant(payload, options?)`):
 
-- Node.js 20+
-- pnpm 10+
+- `id`
+- `duration`
+- `position`
+- `dismissOnClick`
+- `role` (`"alert"` or `"status"`)
 
-### Install
+## Scope and Isolation
+
+- Each `createToast` instance belongs to one `scope`.
+- `<ToastProvider scope="...">` only renders instances from the same scope.
+- One provider per scope is the supported path.
+
+## Development
 
 ```bash
 pnpm install
-```
-
-### Build
-
-```bash
 pnpm build
-```
-
-### Package-specific build
-
-```bash
-pnpm --filter @twist-toast/core build
-pnpm --filter @twist-toast/react build
-```
-
-### Quality checks
-
-```bash
 pnpm lint
-pnpm format
 pnpm check-types
+pnpm format
 ```
 
-## Using Workspace Packages in Examples
+Example app:
 
 ```bash
-pnpm --filter ./examples/vite-react add @twist-toast/core@workspace:*
-pnpm --filter ./examples/vite-react add @twist-toast/react@workspace:*
+pnpm --filter vite-react dev
 ```
-
-## Roadmap
-
-- **Phase 1 (v1.0 target)**: core manager, typed `createToast()`, React provider, test suite, npm-ready docs. Moving for MVP release
-- **Phase 2+**: additional framework adapters (Vue/Svelte) and plugin-style extension points
-
-## Reference
-
-- Business requirements and architecture intent: `PROJECT-BRD.md`
-
-## License
-
-MIT
