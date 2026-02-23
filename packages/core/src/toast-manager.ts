@@ -68,9 +68,7 @@ export function createToastManager(
 
   function stopTimer(id: string): void {
     const handle = timers.get(id);
-    if (!handle) {
-      return;
-    }
+    if (!handle) return;
 
     clearTimeout(handle);
     timers.delete(id);

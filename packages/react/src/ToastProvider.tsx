@@ -1,10 +1,7 @@
-import type {
-  ToastManager,
-  ToastPosition,
-  ToastRecord,
-  ToastRole,
-} from "@twist-toast/core";
-import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type { ToastManager, ToastRole } from "@twist-toast/core";
+import type { RenderedToast } from "./types";
+
+import type { KeyboardEvent, ReactNode } from "react";
 import {
   useEffect,
   useMemo,
@@ -14,6 +11,16 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { ToastErrorBoundary } from "./ToastErrorBoundary";
+import {
+  containerStyles,
+  getToastStyle,
+  getVisualState,
+  groupToastsByPosition,
+  markEnteringToastsVisible,
+  reconcileRenderedToasts,
+  rootStyle,
+} from "./helpers";
+import { usePrefersReducedMotion } from "./hooks/use-refersreduced-motion";
 import { getInstancesSnapshot, subscribeToRegistry } from "./registry";
 import type { ToastComponent, ToastComponentsMap } from "./types";
 
@@ -23,241 +30,8 @@ interface ToastProviderProps {
 
 const TRANSITION_DURATION_MS = 180;
 
-const rootStyle: CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  pointerEvents: "none",
-  zIndex: 9999,
-};
-
-const baseContainerStyle: CSSProperties = {
-  position: "absolute",
-  display: "flex",
-  gap: "0.5rem",
-  maxWidth: "min(420px, calc(100vw - 1rem))",
-  padding: "0.5rem",
-  pointerEvents: "none",
-};
-
-const containerStyles: Record<ToastPosition, CSSProperties> = {
-  "top-left": {
-    ...baseContainerStyle,
-    top: 0,
-    left: 0,
-    alignItems: "flex-start",
-    flexDirection: "column",
-  },
-  "top-center": {
-    ...baseContainerStyle,
-    top: 0,
-    left: "50%",
-    transform: "translateX(-50%)",
-    alignItems: "center",
-    flexDirection: "column",
-  },
-  "top-right": {
-    ...baseContainerStyle,
-    top: 0,
-    right: 0,
-    alignItems: "flex-end",
-    flexDirection: "column",
-  },
-  "bottom-left": {
-    ...baseContainerStyle,
-    bottom: 0,
-    left: 0,
-    alignItems: "flex-start",
-    flexDirection: "column-reverse",
-  },
-  "bottom-center": {
-    ...baseContainerStyle,
-    bottom: 0,
-    left: "50%",
-    transform: "translateX(-50%)",
-    alignItems: "center",
-    flexDirection: "column-reverse",
-  },
-  "bottom-right": {
-    ...baseContainerStyle,
-    bottom: 0,
-    right: 0,
-    alignItems: "flex-end",
-    flexDirection: "column-reverse",
-  },
-};
-
-type ToastRenderPhase = "enter" | "visible" | "exit";
-
-interface RenderedToast {
-  toast: ToastRecord;
-  phase: ToastRenderPhase;
-}
-
-function usePrefersReducedMotion(): boolean {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return undefined;
-    }
-
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => {
-      setPrefersReducedMotion(mediaQuery.matches);
-    };
-
-    update();
-
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", update);
-      return () => {
-        mediaQuery.removeEventListener("change", update);
-      };
-    }
-
-    mediaQuery.addListener(update);
-    return () => {
-      mediaQuery.removeListener(update);
-    };
-  }, []);
-
-  return prefersReducedMotion;
-}
-
 function getAriaLive(role: ToastRole): "polite" | "assertive" {
   return role === "alert" ? "assertive" : "polite";
-}
-
-function getHiddenTransform(position: ToastPosition): string {
-  switch (position) {
-    case "top-left":
-      return "translate3d(-8px, -8px, 0)";
-    case "top-center":
-      return "translate3d(0, -8px, 0)";
-    case "top-right":
-      return "translate3d(8px, -8px, 0)";
-    case "bottom-left":
-      return "translate3d(-8px, 8px, 0)";
-    case "bottom-center":
-      return "translate3d(0, 8px, 0)";
-    case "bottom-right":
-      return "translate3d(8px, 8px, 0)";
-  }
-}
-
-function getToastStyle(
-  position: ToastPosition,
-  phase: ToastRenderPhase,
-  transitionDuration: number,
-): CSSProperties {
-  const isVisible = phase === "visible";
-  const baseStyle: CSSProperties = {
-    pointerEvents: phase === "exit" ? "none" : "auto",
-    opacity: isVisible ? 1 : 0,
-  };
-
-  if (transitionDuration <= 0) {
-    return baseStyle;
-  }
-
-  return {
-    ...baseStyle,
-    transform: isVisible
-      ? "translate3d(0, 0, 0)"
-      : getHiddenTransform(position),
-    transition: `opacity ${transitionDuration}ms ease, transform ${transitionDuration}ms ease`,
-    willChange: "opacity, transform",
-  };
-}
-
-function getVisualState(
-  phase: ToastRenderPhase,
-  paused: boolean,
-): "active" | "paused" | "entering" | "exiting" {
-  if (phase === "exit") {
-    return "exiting";
-  }
-  if (phase === "enter") {
-    return "entering";
-  }
-  if (paused) {
-    return "paused";
-  }
-  return "active";
-}
-
-function reconcileRenderedToasts(
-  previous: RenderedToast[],
-  activeToasts: readonly ToastRecord[],
-): RenderedToast[] {
-  const activeById = new Map(activeToasts.map((toast) => [toast.id, toast]));
-  const seen = new Set<string>();
-  const next: RenderedToast[] = [];
-
-  for (const item of previous) {
-    const activeToast = activeById.get(item.toast.id);
-    if (activeToast) {
-      next.push({
-        toast: activeToast,
-        phase: item.phase === "exit" ? "visible" : item.phase,
-      });
-    } else {
-      next.push(
-        item.phase === "exit"
-          ? item
-          : {
-              toast: item.toast,
-              phase: "exit",
-            },
-      );
-    }
-    seen.add(item.toast.id);
-  }
-
-  for (const toast of activeToasts) {
-    if (!seen.has(toast.id)) {
-      next.push({
-        toast,
-        phase: "enter",
-      });
-    }
-  }
-
-  return next;
-}
-
-function markEnteringToastsVisible(toasts: RenderedToast[]): RenderedToast[] {
-  let changed = false;
-  const next = toasts.map<RenderedToast>((item) => {
-    if (item.phase !== "enter") {
-      return item;
-    }
-    changed = true;
-    return {
-      ...item,
-      phase: "visible",
-    };
-  });
-
-  return changed ? next : toasts;
-}
-
-function groupToastsByPosition(
-  toasts: RenderedToast[],
-): Map<ToastPosition, RenderedToast[]> {
-  const groups = new Map<ToastPosition, RenderedToast[]>();
-
-  for (const item of toasts) {
-    const position = item.toast.position;
-    const current = groups.get(position);
-    if (current) {
-      current.push(item);
-      continue;
-    }
-    groups.set(position, [item]);
-  }
-
-  return groups;
 }
 
 interface ManagerToastsProps {

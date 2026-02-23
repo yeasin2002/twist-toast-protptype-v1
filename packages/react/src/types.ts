@@ -1,6 +1,7 @@
 import type {
   DedupeBehavior,
   ToastPosition,
+  ToastRecord,
   ToastRole,
 } from "@twist-toast/core";
 import type { ComponentType } from "react";
@@ -70,3 +71,11 @@ export type ToastInstance<TComponents extends ToastComponentsMap> = {
   dismissAll: () => void;
   destroy: () => void;
 };
+
+// Internal types
+export type ToastRenderPhase = "enter" | "visible" | "exit";
+
+export interface RenderedToast {
+  toast: ToastRecord;
+  phase: ToastRenderPhase;
+}
