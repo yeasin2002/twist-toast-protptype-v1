@@ -6,7 +6,7 @@ twist-toast is a React toast notification library that solves design lock-in by 
 ## Core Value Proposition
 
 - Developers define their own toast components with full design control
-- Library handles state management, queuing, timing, and accessibility
+- Library handles state management, logics, accessibility
 - Zero runtime dependencies beyond React
 - TypeScript-first with full type inference from component definitions
 
@@ -14,11 +14,9 @@ twist-toast is a React toast notification library that solves design lock-in by 
 
 - `createToast()` factory pattern for typed toast instances
 - Zero-config `<ToastProvider>` wrapper
-- Queue management with configurable limits
-- Deduplication and programmatic dismissal
 - Pause on hover, keyboard accessible
-- Support for custom variants (success, error, warning, info, custom)
-- Multiple isolated toast instances per app
+- No build in variants, all will be  custom  like success, error, warning, info, custom will also provided by the users. 
+
 
 ## Target Users
 

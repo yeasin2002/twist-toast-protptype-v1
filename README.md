@@ -2,7 +2,7 @@
 
 Design-system-first toast notifications.
 
-`twist-toast` is an open-source library focused on one principle: you own every pixel of the toast UI, while the library manages behavior (state, queueing, timing, lifecycle, and accessibility).
+`twist-toast` is an open-source library focused on one principle: you own every pixel of the toast UI, while the library manages behavior
 
 ## Why twist-toast
 
@@ -19,9 +19,19 @@ The primary integration model is:
 
 1. Define your toast components
 2. Call `createToast(components, options?)`
-3. Use a zero-config `<ToastProvider>` in your app root
+3. Use a `<ToastProvider>` in your app root that will render toasts via a portal
 
-This keeps configuration close to your component definitions and gives strongly typed `toast.success(...)`, `toast.error(...)`, and custom variant methods.
+Note: this library doses't include any UI components or styles. You are responsible for implementing the toast presentation layer, which gives you full control to match your design system. by default we don't have any toast component. users need to configure like this:
+
+```tsx
+import { createToast } from "@twist-toast/react";
+import { SuccessComponent } from "./success-component";
+
+const toast = createToast({
+  success: SuccessComponent,
+  // other toast types...
+});
+```
 
 ## Target Capabilities (Phase 1)
 
@@ -31,26 +41,11 @@ This keeps configuration close to your component definitions and gives strongly 
 - Programmatic dismissal: `dismiss(id)` and `dismissAll()`
 - Per-toast options: `duration`, `position`, `dismissOnClick`, `id`, `role`
 - Accessibility defaults (`alert`/`status`, non-focus-stealing behavior)
-- Multiple isolated toast instances in a single app
 
 ## Monorepo Packages
 
-### `@twist-toast/core`
-
-Framework-agnostic core logic:
-
-- state machine and queue orchestration
-- timer lifecycle and dismissal flow
-- dedupe behavior and internal events
-- shared types used by adapters
-
-### `@twist-toast/react`
-
-React adapter layer:
-
-- provider/context wiring
-- portal-based rendering
-- React-facing APIs built on top of `@twist-toast/core`
+`@twist-toast/core` - Framework-agnostic core logic:
+`@twist-toast/react` -React adapter layer, React-facing APIs built on top of `@twist-toast/core`
 
 ## Repository Layout
 
@@ -73,7 +68,7 @@ This repository is currently under active development.
 
 ### Requirements
 
-- Node.js 18+
+- Node.js 20+
 - pnpm 10+
 
 ### Install
@@ -112,9 +107,8 @@ pnpm --filter ./examples/vite-react add @twist-toast/react@workspace:*
 
 ## Roadmap
 
-- **Phase 1 (v1.0 target)**: core manager, typed `createToast()`, React provider, test suite, npm-ready docs
-- **Phase 2**: CLI scaffolding support
-- **Phase 3+**: additional framework adapters (Vue/Svelte) and plugin-style extension points
+- **Phase 1 (v1.0 target)**: core manager, typed `createToast()`, React provider, test suite, npm-ready docs. Moving for MVP release
+- **Phase 2+**: additional framework adapters (Vue/Svelte) and plugin-style extension points
 
 ## Reference
 
